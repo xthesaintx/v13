@@ -1,0 +1,29 @@
+{
+  "id": "campaign-codex",
+  "title": "campaign-codex",
+  "version": "11.1",
+  "esmodules": ["scripts/main.js"],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+      "url": "https://github.com/xthesaintx/worldbuilder/",
+  "manifest": "https://raw.githubusercontent.com/xthesaintx/worldbuilder/main/module.json",
+  "download": "https://github.com/xthesaintx/worldbuilder/archive/refs/tags/111.zip",
+  "readme": "https://github.com/xthesaintx/worldbuilder/blob/main/README.md",
+  
+"authors": [
+    {
+      "name": "Stephen Garrett",
+      "url": "https://www.patreon.com/wgtngm",
+      "flags": {}
+    }
+  ],
+  "styles": [
+    "styles/campaign-codex.css"
+  ],
+    "relationships": {
+    "systems": [
+    ]
+  }
+}
