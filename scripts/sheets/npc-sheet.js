@@ -327,7 +327,7 @@ export class NPCSheet extends CampaignCodexBaseSheet {
   }
 
   static async #onRemoveActor(event, target) {
-    await this._saveFormData();
+    // await this._saveFormData();
     const currentData = this.document.getFlag("campaign-codex", "data") || {};
     currentData.linkedActor = null;
     await this.document.setFlag("campaign-codex", "data", currentData);
@@ -463,15 +463,15 @@ export class NPCSheet extends CampaignCodexBaseSheet {
     const journalType = journal.getFlag("campaign-codex", "type");
     
     if (journalType === "location") {
-      await this._saveFormData();
+      // await this._saveFormData();
       await game.campaignCodex.linkLocationToNPC(journal, this.document);
       this.render(false);
     } else if (journalType === "shop") {
-      await this._saveFormData();
+      // await this._saveFormData();
       await game.campaignCodex.linkShopToNPC(journal, this.document);
       this.render(false);
     } else if (journalType === "npc") {
-      await this._saveFormData();
+      // await this._saveFormData();
       await game.campaignCodex.linkNPCToNPC(this.document, journal);
       this.render(false);
     }
