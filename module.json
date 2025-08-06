@@ -1,7 +1,7 @@
 {
   "id": "campaign-codex",
   "title": "campaign-codex",
-  "version": "11.1",
+  "version": "0.0.1",
   "esmodules": ["scripts/main.js"],
   "compatibility": {
     "minimum": "13",
@@ -9,7 +9,7 @@
   },
       "url": "https://github.com/xthesaintx/v13/",
   "manifest": "https://raw.githubusercontent.com/xthesaintx/v13/main/module.json",
-  "download": "https://github.com/xthesaintx/v13/archive/refs/tags/111.zip",
+  "download": "https://github.com/xthesaintx/v13/archive/refs/tags/001.zip",
   "readme": "https://github.com/xthesaintx/v13/blob/main/README.md",
   
 "authors": [
