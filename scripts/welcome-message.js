@@ -1,7 +1,7 @@
 let contentCard = `
 <div>
     <p><strong>Welcome to Campaign Codex</strong></p>
-    <p>Folder management, system item price location and system item currency location and can be changed in settings.</p>
+    <p>Folder management, system item price location and system item currency location can be changed in settings.</p>
     <div><button data-campaign-codex-handler="campaign-codex|openMenu|core_settings"><i class="fas fa-wrench"></i>Settings</button></div>
     <hr>
     <p><strong>Be part of the Campaign Codex Community</strong></p>
