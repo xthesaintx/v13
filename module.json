@@ -4,13 +4,13 @@
   "version": "11.1",
   "esmodules": ["scripts/main.js"],
   "compatibility": {
-    "minimum": "12",
-    "verified": "12"
+    "minimum": "13",
+    "verified": "13"
   },
-      "url": "https://github.com/xthesaintx/worldbuilder/",
-  "manifest": "https://raw.githubusercontent.com/xthesaintx/worldbuilder/main/module.json",
-  "download": "https://github.com/xthesaintx/worldbuilder/archive/refs/tags/111.zip",
-  "readme": "https://github.com/xthesaintx/worldbuilder/blob/main/README.md",
+      "url": "https://github.com/xthesaintx/v13/",
+  "manifest": "https://raw.githubusercontent.com/xthesaintx/v13/main/module.json",
+  "download": "https://github.com/xthesaintx/v13/archive/refs/tags/111.zip",
+  "readme": "https://github.com/xthesaintx/v13/blob/main/README.md",
   
 "authors": [
     {

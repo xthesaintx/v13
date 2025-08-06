@@ -1,4 +1,4 @@
-<div class="campaign-codex {{sheetType}}-sheet">
+<div class="campaign-codex {{sheetType}}-sheet themed">
   <div class="sheet-container">
     
     {{!-- Sidebar --}}
@@ -15,7 +15,7 @@
         <h1 class="sheet-title">{{document.name}}</h1>
         <div class="sheet-type">{{sheetTypeLabel}}</div>
         
-        <button class="image-change-btn" type="button">
+        <button type="button" data-action="changeImage" class="image-change-btn" title="Change Image">
           <i class="fas fa-camera"></i>
         </button>
         
@@ -23,20 +23,18 @@
         {{{customHeaderContent}}}
       </div>
       
-
-      
-{{!-- Navigation Tabs with Integrated Statistics --}}
-<nav class="sidebar-tabs">
-  {{#each tabs}}
-    <div class="tab-item {{#if active}}active{{/if}}" data-tab="{{key}}">
-      <i class="{{icon}}"></i>
-      <span class="tab-label">{{label}}</span>
-      {{#if statistic}}
-        <span class="tab-stat" style="color: {{statistic.color}};">({{statistic.value}})</span>
-      {{/if}}
-    </div>
-  {{/each}}
-</nav>
+      {{!-- Navigation Tabs with Integrated Statistics --}}
+      <nav class="sidebar-tabs">
+        {{#each tabs}}
+          <div class="tab-item {{#if active}}active{{/if}}" data-action="switchTab" data-tab="{{key}}" role="button" tabindex="0">
+            <i class="{{icon}}"></i>
+            <span class="tab-label">{{label}}</span>
+            {{#if statistic}}
+              <span class="tab-stat" style="color: {{statistic.color}};">({{statistic.value}})</span>
+            {{/if}}
+          </div>
+        {{/each}}
+      </nav>
 
       {{!-- Quick Links --}}
       {{#if quickLinks}}
@@ -44,10 +42,14 @@
           <h3>Quicklinks</h3>
           <div class="link-grid">
             {{#each quickLinks}}
-              <div class="link-card {{type}}-link" data-{{type}}-uuid="{{uuid}}" title="{{name}}">
-                <!-- <img src="{{img}}" alt="{{name}}"> -->
-                          <i class="{{getIcon type}} link-icon"></i>
-
+              <div class="link-card {{type}}-link" 
+                   data-action="openQuickLink" 
+                   data-type="{{type}}" 
+                   data-uuid="{{uuid}}" 
+                   title="{{name}}"
+                   role="button" 
+                   tabindex="0">
+                <i class="{{getIcon type}} link-icon"></i>
                 <span class="link-name">{{name}}</span>
               </div>
             {{/each}}
