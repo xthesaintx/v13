@@ -277,14 +277,13 @@ export class CampaignCodexBaseSheet extends HandlebarsApplicationMixin(DocumentS
     await this._onSubmit(event);
   }
 
-  static async #onTabSwitch(event, target) {
-    event.preventDefault();
-    const tabName = target.dataset.tab;
-    
-    if (tabName) {
-      this._switchTab(tabName);
-    }
+static async #onTabSwitch(event, target) {
+  event.preventDefault();
+  const tabName = target.dataset.tab;
+  if (tabName) {
+    this._showTab(tabName); 
   }
+}
 
   static async #onNameEdit(event, target) {
     event.preventDefault();
