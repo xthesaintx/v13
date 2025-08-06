@@ -79,7 +79,7 @@ export class DescriptionEditor extends HandlebarsApplicationMixin(ApplicationV2)
 
     try {
       // Create the ProseMirror editor
-      this.editor = await TextEditor.create({
+      this.editor = await foundry.applications.ux.TextEditor.implementation.create({
         target: targetElement,
         engine: "prosemirror",
         plugins: plugins

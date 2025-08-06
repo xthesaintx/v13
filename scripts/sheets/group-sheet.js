@@ -327,13 +327,13 @@ export class GroupSheet extends CampaignCodexBaseSheet {
   }
 
   async _generateSelectedSheetContent(selectedDoc, selectedData, activeTab) {
-    const enrichedDescription = await TextEditor.enrichHTML(selectedData.description || "", { 
+    const enrichedDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(selectedData.description || "", { 
       async: true, 
       secrets: selectedDoc.isOwner 
     });
     const systemClass = game.system.id === 'dnd5e' ? ' dnd5e' : '';
     const journalClass = game.system.id === 'dnd5e' ? ' journal-entry-content' : ''; 
-    const enrichedNotes = await TextEditor.enrichHTML(selectedData.notes || "", { 
+    const enrichedNotes = await foundry.applications.ux.TextEditor.implementation.enrichHTML(selectedData.notes || "", { 
       async: true, 
       secrets: selectedDoc.isOwner 
     });

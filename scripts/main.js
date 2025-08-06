@@ -24,27 +24,28 @@ import {
 
 Hooks.once('init', async function() {
     console.log('Campaign Codex | Initializing');
+    
     await campaigncodexSettings();
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
         makeDefault: false,
         label: "Campaign Codex: Location"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
         makeDefault: false,
         label: "Campaign Codex: Shop"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
         makeDefault: false,
         label: "Campaign Codex: NPC"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
         makeDefault: false,
         label: "Campaign Codex: Region"
     });
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
         makeDefault: false,
         label: "Campaign Codex: Group Overview"
     });
@@ -316,15 +317,12 @@ Hooks.on('updateActor', async (actor, changes, options, userId) => {
 });
 
 
-// CRITICAL v13 CHANGE: html parameter is now DOM element, not jQuery object
-Hooks.on('renderChatMessage', (app, html, data) => {
-    // Convert jQuery selector to vanilla JavaScript
+Hooks.on('renderChatMessageHTML', (app, html, data) => {
     const handlers = html.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
     handlers.forEach(element => {
         element.addEventListener('click', handleCampaignCodexClick);
     });
 });
-
 
 
 // This is now exported from helper.js

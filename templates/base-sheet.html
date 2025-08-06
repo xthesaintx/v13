@@ -15,7 +15,7 @@
         <h1 class="sheet-title">{{document.name}}</h1>
         <div class="sheet-type">{{sheetTypeLabel}}</div>
         
-        <button type="button" data-action="changeImage" class="image-change-btn" title="Change Image">
+        <button type="button" data-action="imageClick" class="image-change-btn" title="Change Image">
           <i class="fas fa-camera"></i>
         </button>
         
@@ -26,7 +26,11 @@
       {{!-- Navigation Tabs with Integrated Statistics --}}
       <nav class="sidebar-tabs">
         {{#each tabs}}
-          <div class="tab-item {{#if active}}active{{/if}}" data-action="switchTab" data-tab="{{key}}" role="button" tabindex="0">
+          <div class="tab-item {{#if active}}active{{/if}}" 
+               data-action="tabSwitch" 
+               data-tab="{{key}}" 
+               role="button" 
+               tabindex="0">
             <i class="{{icon}}"></i>
             <span class="tab-label">{{label}}</span>
             {{#if statistic}}
@@ -43,8 +47,7 @@
           <div class="link-grid">
             {{#each quickLinks}}
               <div class="link-card {{type}}-link" 
-                   data-action="openQuickLink" 
-                   data-type="{{type}}" 
+                   data-action="openDocument" 
                    data-uuid="{{uuid}}" 
                    title="{{name}}"
                    role="button" 
@@ -66,7 +69,9 @@
         
         {{!-- Tab Panels --}}
         {{#each tabPanels}}
-          <section class="tab-panel {{#if active}}active{{/if}}" data-tab="{{key}}">
+          <section class="tab-panel {{#if active}}active{{/if}}" 
+                   data-tab="{{key}}" 
+                   data-tab-content="{{key}}">
             {{{content}}}
           </section>
         {{/each}}
