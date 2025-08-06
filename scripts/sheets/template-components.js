@@ -60,7 +60,6 @@ export class TemplateComponents {
         <prose-mirror name="flags.campaign-codex.data.${fieldName}" 
                       document-uuid="${documentUuid}" 
                       toggled 
-                      collaborate
                       class="${journalClass}">
           ${enrichedValue}
         </prose-mirror>

@@ -267,7 +267,7 @@ export class CampaignCodexBaseSheet extends HandlebarsApplicationMixin(DocumentS
     const tabName = target.dataset.tab;
     
     if (tabName) {
-      this._switchTab(tabName);
+      this._showTab(tabName);
     }
   }
 
