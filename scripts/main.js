@@ -24,28 +24,27 @@ import {
 
 Hooks.once('init', async function() {
     console.log('Campaign Codex | Initializing');
-    
     await campaigncodexSettings();
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
+    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
         makeDefault: false,
         label: "Campaign Codex: Location"
     });
 
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
+    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
         makeDefault: false,
         label: "Campaign Codex: Shop"
     });
 
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
+    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
         makeDefault: false,
         label: "Campaign Codex: NPC"
     });
 
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
+    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
         makeDefault: false,
         label: "Campaign Codex: Region"
     });
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
+    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
         makeDefault: false,
         label: "Campaign Codex: Group Overview"
     });
@@ -167,7 +166,6 @@ Hooks.on('getJournalDirectoryEntryContext', (html, options) => {
     });
 });
 
-// CRITICAL v13 CHANGE: html parameter is now DOM element, not jQuery object
 Hooks.on('renderJournalDirectory', (app, html, data) => {
     // Call the single function that handles all UI additions for the directory
     addJournalDirectoryUI(html); 
@@ -242,9 +240,7 @@ Hooks.on('renderJournalEntry', async (journal, html, data) => {
         await Promise.resolve(); 
         
         journal.sheet.close();
-        const sheet = new targetSheet({
-            document: journal  // v13 requires document in options object
-        });
+        const sheet = new targetSheet(journal);
         sheet.render(true);
         journal._campaignCodexSheet = sheet;
     }
@@ -317,13 +313,12 @@ Hooks.on('updateActor', async (actor, changes, options, userId) => {
 });
 
 
-Hooks.on('renderChatMessageHTML', (app, html, data) => {
-    const handlers = html.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
-    handlers.forEach(element => {
-        element.addEventListener('click', handleCampaignCodexClick);
-    });
+// Register the hook to listen for clicks on chat messages
+Hooks.on('renderChatMessage', (app, html, data) => {
+    html.find(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`).click(handleCampaignCodexClick);
 });
 
 
+
 // This is now exported from helper.js
-// window.getCampaignCodexFolder = getCampaignCodexFolder;
+// window.getCampaignCodexFolder = getCampaignCodexFolder; 

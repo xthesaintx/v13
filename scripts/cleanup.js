@@ -1,3 +1,4 @@
+
 export class CleanUp {
   constructor() {
     this.setupHooks();
@@ -337,7 +338,6 @@ export class CleanUp {
 
   /**
    * Refresh any open group sheets that might be affected by document deletion
-   * v13 NOTE: Sheet instances remain unchanged - only render() method used
    */
   async refreshAffectedGroupSheets(deletedDoc) {
     const deletedUuid = deletedDoc.uuid;
@@ -367,7 +367,6 @@ export class CleanUp {
 
   /**
    * Manual cleanup function for when things get out of sync
-   * v13 NOTE: This method uses async/await and promises which are unchanged
    */
   static async performManualCleanup() {
     console.log("Campaign Codex | Starting manual cleanup of all relationships");
@@ -469,22 +468,25 @@ export class CleanUp {
     ui.notifications.info(`Manual cleanup completed. Fixed ${brokenLinks.length} broken links in ${fixPromises.length} documents.`);
   }
 
-  async cleanupSceneRelationships(deletedUuid, allDocuments) {
-    const updatePromises = [];
+async cleanupSceneRelationships(deletedUuid, allDocuments) {
+  const updatePromises = [];
+  
+  
+  for (const doc of allDocuments) {
+    const docData = doc.getFlag("campaign-codex", "data") || {};
     
-    
-    for (const doc of allDocuments) {
-      const docData = doc.getFlag("campaign-codex", "data") || {};
-      
-      if (docData.linkedScene === deletedUuid) {
-        console.log(`Campaign Codex | Removing scene reference from: ${doc.name}`);
-        updatePromises.push(
-          doc.unsetFlag("campaign-codex", "data.linkedScene")
-            .catch(err => console.warn(`Failed to update ${doc.name}:`, err))
-        );
-      }
+    if (docData.linkedScene === deletedUuid) {
+      console.log(`Campaign Codex | Removing scene reference from: ${doc.name}`);
+      updatePromises.push(
+        doc.unsetFlag("campaign-codex", "data.linkedScene")
+          .catch(err => console.warn(`Failed to update ${doc.name}:`, err))
+      );
     }
-    
-    return updatePromises;
   }
+  
+  return updatePromises;
+}
+
+
+  
 }

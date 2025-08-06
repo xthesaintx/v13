@@ -5,9 +5,9 @@ import { GroupLinkers } from './sheets/group-linkers.js'; // Needed for showAddT
 
 /**
  * HTML string for the main campaign codex action buttons.
- * @type {string}
+ * @type {JQuery<HTMLElement>}
  */
-export const buttonGrouphead = `
+export const buttonGrouphead = $(`
     <div class="campaign-codex-buttons" style="margin: 8px 0; display: flex; gap: 4px; flex-wrap: wrap;">
         <button class="create-region-btn" type="button" title="Create New Region" style="flex: 1; min-width: 0; padding: 4px 8px; font-size: 11px; background: #20c997; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <i class="fas fa-globe"></i>
@@ -25,7 +25,7 @@ export const buttonGrouphead = `
             <i class="fas fa-layer-group"></i>
         </button>
     </div>
-`;
+`);
 
 /**
  * Handles clicks on elements with data-campaign-codex-handler attributes.
@@ -53,54 +53,40 @@ export function handleCampaignCodexClick(event) {
 
     switch (action) {
         case 'openMenu':
-            // Example: Open your module's settings tab
-            // Assuming the first arg is the tab ID (e.g., 'core_settings', 'membership_settings')
             if (args[0]) {
                 game.settings.sheet.render(true, {tab: args[0]});
-                // If you have a custom settings app, you might do:
-                // new MyCustomSettingsApp().render(true, {tab: args[0]});
             }
             break;
         case 'openWindow':
-            // Example: Open an external URL in a new window/tab
             if (args[0]) {
                 window.open(args[0], '_blank');
             }
             break;
-        // Add more cases for other actions your module might need
-        // case 'someOtherAction':
-        //     // Call a method on your CampaignManager or another module class
-        //     game.campaignCodex.someMethod(args[0], args[1]);
-        //     break;
         default:
             console.warn(`Campaign Codex | Unknown action for handler: ${action}`);
             break;
     }
 }
 
+
 /**
- * Creates and returns a DOM element for the export/import buttons.
+ * Generates the HTML for the export/import buttons.
  * @param {boolean} hasCampaignCodex - Whether there is any Campaign Codex content to export.
- * @returns {HTMLElement} The DOM element containing the button HTML.
+ * @returns {JQuery<HTMLElement>} The jQuery object containing the button HTML.
  */
 export function getExportImportButtonsHtml(hasCampaignCodex) {
-    const container = document.createElement('div');
-    container.className = 'campaign-codex-export-buttons';
-    container.style.cssText = 'margin: 8px;display: flex;gap: 4px;flex-direction: column;';
-    
-    const buttonsHtml = `
-        ${hasCampaignCodex ? `
-            <button class="cc-export-btn" type="button" title="Export all Campaign Codex content to compendium" style="flex: 1; padding: 4px 8px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; height: auto">
-                <i class="fas fa-download"></i> Export Campaign Codex
+    return $(`
+        <div class="campaign-codex-export-buttons" style="margin: 8px;display: flex;gap: 4px;flex-direction: column;">
+            ${hasCampaignCodex ? `
+                <button class="cc-export-btn" type="button" title="Export all Campaign Codex content to compendium" style="flex: 1; padding: 4px 8px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; height: auto">
+                    <i class="fas fa-download"></i> Export Campaign Codex
+                </button>
+            ` : ''}
+            <button class="cc-import-btn" type="button" title="Import Campaign Codex content from compendium" style="flex: 1; padding: 4px 8px; font-size: 11px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; height: auto">
+                <i class="fas fa-upload"></i> Import Campaign Codex
             </button>
-        ` : ''}
-        <button class="cc-import-btn" type="button" title="Import Campaign Codex content from compendium" style="flex: 1; padding: 4px 8px; font-size: 11px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; height: auto">
-            <i class="fas fa-upload"></i> Import Campaign Codex
-        </button>
-    `;
-    
-    container.innerHTML = buttonsHtml;
-    return container;
+        </div>
+    `);
 }
 
 /**
@@ -109,48 +95,42 @@ export function getExportImportButtonsHtml(hasCampaignCodex) {
  * @returns {Promise<string|null>} A promise that resolves with the entered name or null if cancelled.
  */
 export async function promptForName(type) {
-    const result = await foundry.applications.api.DialogV2.wait({
-        window: { title: `Create New ${type}` },
-        content: `
-            <form class="flexcol">
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input type="text" name="name" placeholder="Enter ${type.toLowerCase()} name..." autofocus style="width: 100%;" />
-                </div>
-            </form>
-        `,
-        buttons: [
-            {
-                action: "create",
-                icon: "fas fa-check",
-                label: "Create",
-                default: true,
-                callback: (event, button, dialog) => {
-                    const name = button.form.elements.name.value.trim();
-                    return name || `New ${type}`;
+    return new Promise((resolve) => {
+        new Dialog({
+            title: `Create New ${type}`,
+            content: `
+                <form class="flexcol">
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" name="name" placeholder="Enter ${type.toLowerCase()} name..." autofocus style="width: 100%;" />
+                    </div>
+                </form>
+            `,
+            buttons: {
+                create: {
+                    icon: '<i class="fas fa-check"></i>',
+                    label: "Create",
+                    callback: (html) => {
+                        const name = html.find('[name="name"]').val().trim();
+                        resolve(name || `New ${type}`);
+                    }
+                },
+                cancel: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Cancel",
+                    callback: () => resolve(null)
                 }
             },
-            {
-                action: "cancel", 
-                icon: "fas fa-times",
-                label: "Cancel",
-                callback: () => null
+            default: "create",
+            render: (html) => {
+                html.find('input[name="name"]').focus().keypress((e) => {
+                    if (e.which === 13) {
+                        html.closest('.dialog').find('.dialog-button.create button').click();
+                    }
+                });
             }
-        ],
-        rejectClose: false, // v13 default behavior - returns null on close
-        render: (event, dialog) => {
-            const input = dialog.element.querySelector('input[name="name"]');
-            input?.focus();
-            input?.addEventListener('keypress', (e) => {
-                if (e.which === 13) {
-                    const createButton = dialog.element.querySelector('[data-action="create"]');
-                    createButton?.click();
-                }
-            });
-        }
+        }).render(true);
     });
-
-    return result;
 }
 
 /**
@@ -239,159 +219,124 @@ export async function showAddToGroupDialog(journal) {
         `<option value="${group.uuid}">${group.name}</option>`
     ).join('');
 
-    const result = await foundry.applications.api.DialogV2.wait({
-        window: { title: "Add to Group" },
-        content: `
-            <form class="flexcol">
-                <div class="form-group">
-                    <label>Select Group:</label>
-                    <select name="groupUuid" style="width: 100%;">
-                        ${options}
-                    </select>
-                </div>
-                <p style="font-size: 12px; color: #666; margin: 8px 0;">
-                    This will add "${journal.name}" to the selected group overview.
-                </p>
-            </form>
-        `,
-        buttons: [
-            {
-                action: "add",
-                icon: "fas fa-plus",
-                label: "Add to Group",
-                default: true,
-                callback: async (event, button, dialog) => {
-                    const groupUuid = button.form.elements.groupUuid.value;
-                    const groupJournal = await fromUuid(groupUuid);
+    return new Promise((resolve) => {
+        new Dialog({
+            title: "Add to Group",
+            content: `
+                <form class="flexcol">
+                    <div class="form-group">
+                        <label>Select Group:</label>
+                        <select name="groupUuid" style="width: 100%;">
+                            ${options}
+                        </select>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin: 8px 0;">
+                        This will add "${journal.name}" to the selected group overview.
+                    </p>
+                </form>
+            `,
+            buttons: {
+                add: {
+                    icon: '<i class="fas fa-plus"></i>',
+                    label: "Add to Group",
+                    callback: async (html) => {
+                        const groupUuid = html.find('[name="groupUuid"]').val();
+                        const groupJournal = await fromUuid(groupUuid);
 
-                    if (groupJournal) {
-                        const groupData = groupJournal.getFlag("campaign-codex", "data") || {};
-                        const members = groupData.members || [];
+                        if (groupJournal) {
+                            const groupData = groupJournal.getFlag("campaign-codex", "data") || {};
+                            const members = groupData.members || [];
 
-                        if (!members.includes(journal.uuid)) {
-                            members.push(journal.uuid);
-                            groupData.members = members;
-                            await groupJournal.setFlag("campaign-codex", "data", groupData);
-                            ui.notifications.info(`Added "${journal.name}" to group "${groupJournal.name}"`);
+                            if (!members.includes(journal.uuid)) {
+                                members.push(journal.uuid);
+                                groupData.members = members;
+                                await groupJournal.setFlag("campaign-codex", "data", groupData);
+                                ui.notifications.info(`Added "${journal.name}" to group "${groupJournal.name}"`);
 
-                            // Refresh any open group sheets
-                            for (const app of Object.values(ui.windows)) {
-                                if (app.document && app.document.uuid === groupJournal.uuid) {
-                                    app.render(false);
-                                    break;
+                                for (const app of Object.values(ui.windows)) {
+                                    if (app.document && app.document.uuid === groupJournal.uuid) {
+                                        app.render(false);
+                                        break;
+                                    }
                                 }
+                            } else {
+                                ui.notifications.warn(`"${journal.name}" is already in this group.`);
                             }
-                        } else {
-                            ui.notifications.warn(`"${journal.name}" is already in this group.`);
                         }
+                        resolve();
                     }
-                    return true;
+                },
+                cancel: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "Cancel",
+                    callback: () => resolve()
                 }
             },
-            {
-                action: "cancel",
-                icon: "fas fa-times", 
-                label: "Cancel",
-                callback: () => null
-            }
-        ],
-        rejectClose: false // v13 default - returns null on close
+            default: "add"
+        }).render(true);
     });
-
-    return result;
 }
 
 /**
  * Adds Campaign Codex specific buttons to the Journal Directory UI.
- * @param {HTMLElement} html - The DOM element representing the Journal Directory HTML.
+ * @param {JQuery<HTMLElement>} html - The jQuery object representing the Journal Directory HTML.
  */
 export function addJournalDirectoryUI(html) {
     if (!game.user.isGM) return;
 
     // Remove existing buttons to prevent duplicates on re-render
-    const existingButtons = html.querySelector('.campaign-codex-export-buttons');
-    if (existingButtons) {
-        existingButtons.remove();
-    }
+    html.find('.campaign-codex-export-buttons').remove();
 
     // Determine if export button should be shown
     const hasCampaignCodex = game.journal.some(j => j.getFlag("campaign-codex", "type"));
     const buttonContainer = getExportImportButtonsHtml(hasCampaignCodex);
 
     // Append export/import buttons to the footer or after the list
-    const footer = html.querySelector('.directory-footer');
-    if (footer) {
-        footer.appendChild(buttonContainer);
+    const footer = html.find('.directory-footer');
+    if (footer.length > 0) {
+        footer.append(buttonContainer);
     } else {
-        const directoryList = html.querySelector('.directory-list');
-        if (directoryList && directoryList.parentNode) {
-            directoryList.parentNode.insertBefore(buttonContainer, directoryList.nextSibling);
-        }
+        html.find('.directory-list').after(buttonContainer);
     }
 
     // Attach click listeners for export/import
-    const exportBtn = html.querySelector('.cc-export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            SimpleCampaignCodexExporter.exportCampaignCodexToCompendium();
-        });
-    }
+    html.find('.cc-export-btn').click(ev => {
+        ev.preventDefault();
+        SimpleCampaignCodexExporter.exportCampaignCodexToCompendium();
+    });
 
-    const importBtn = html.querySelector('.cc-import-btn');
-    if (importBtn) {
-        importBtn.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            SimpleCampaignCodexImporter.importCampaignCodexFromCompendium();
-        });
-    }
+    html.find('.cc-import-btn').click(ev => {
+        ev.preventDefault();
+        SimpleCampaignCodexImporter.importCampaignCodexFromCompendium();
+    });
 
-    // Create and append the main create buttons to the directory header
-    const directoryHeader = html.querySelector('.directory-header');
-    if (directoryHeader) {
-        const buttonContainer = document.createElement('div');
-        buttonContainer.innerHTML = buttonGrouphead;
-        directoryHeader.appendChild(buttonContainer.firstElementChild);
+    // Append the main create buttons to the directory header
+    const directoryHeader = html.find('.directory-header');
+    directoryHeader.append(buttonGrouphead);
 
-        // Attach click listeners for the create buttons
-        const createLocationBtn = html.querySelector('.create-location-btn');
-        if (createLocationBtn) {
-            createLocationBtn.addEventListener('click', async () => {
-                const name = await promptForName("Location");
-                if (name) await game.campaignCodex.createLocationJournal(name);
-            });
-        }
+    // Attach click listeners for the create buttons
+    html.find('.create-location-btn').click(async () => {
+        const name = await promptForName("Location");
+        if (name) await game.campaignCodex.createLocationJournal(name);
+    });
 
-        const createShopBtn = html.querySelector('.create-shop-btn');
-        if (createShopBtn) {
-            createShopBtn.addEventListener('click', async () => {
-                const name = await promptForName("Entry");
-                if (name) await game.campaignCodex.createShopJournal(name);
-            });
-        }
+    html.find('.create-shop-btn').click(async () => {
+        const name = await promptForName("Entry");
+        if (name) await game.campaignCodex.createShopJournal(name);
+    });
 
-        const createNpcBtn = html.querySelector('.create-npc-btn');
-        if (createNpcBtn) {
-            createNpcBtn.addEventListener('click', async () => {
-                const name = await promptForName("NPC Journal");
-                if (name) await game.campaignCodex.createNPCJournal(null, name);
-            });
-        }
+    html.find('.create-npc-btn').click(async () => {
+        const name = await promptForName("NPC Journal");
+        if (name) await game.campaignCodex.createNPCJournal(null, name);
+    });
 
-        const createRegionBtn = html.querySelector('.create-region-btn');
-        if (createRegionBtn) {
-            createRegionBtn.addEventListener('click', async () => {
-                const name = await promptForName("Region");
-                if (name) await game.campaignCodex.createRegionJournal(name);
-            });
-        }
+    html.find('.create-region-btn').click(async () => {
+        const name = await promptForName("Region");
+        if (name) await game.campaignCodex.createRegionJournal(name);
+    });
 
-        const createGroupBtn = html.querySelector('.create-group-btn');
-        if (createGroupBtn) {
-            createGroupBtn.addEventListener('click', async () => {
-                const name = await promptForName("Group Overview");
-                if (name) await game.campaignCodex.createGroupJournal(name);
-            });
-        }
-    }
+    html.find('.create-group-btn').click(async () => {
+        const name = await promptForName("Group Overview");
+        if (name) await game.campaignCodex.createGroupJournal(name);
+    });
 }

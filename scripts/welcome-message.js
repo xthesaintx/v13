@@ -8,8 +8,11 @@ let contentCard = `
     <p>If you would like to suggest a feature, report a bug, or just want to chat, feel free to join us on Discord.</p>
     <div><button data-campaign-codex-handler="campaign-codex|openWindow|https://discord.gg/k3ZzWF7y"><i class="fab fa-discord"></i> Join Discord</button></div>
     <p><strong>Supporting the development</strong></p>
-    <p>If you want to support the development, consider taking a look at the membership options on Patreon.</p>
+    <p>If you want to support the development, consider taking a look at the membership options on Patreon</a>.</p>
     <div><button data-campaign-codex-handler="campaign-codex|openWindow|https://patreon.com/wgtngm"><i class="fas fa-star"></i> Become a member</button></div>
 </div>
 `;
 export {contentCard}
+
+
+

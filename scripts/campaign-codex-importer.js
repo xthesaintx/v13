@@ -1,3 +1,4 @@
+
 export class SimpleCampaignCodexImporter {
   static CONSTANTS = {
     FLAG_SCOPE: "campaign-codex",
@@ -72,78 +73,68 @@ export class SimpleCampaignCodexImporter {
     const options = ccCompendiums.map(comp => 
       `<option value="${comp.name}">${comp.label}</option>`
     ).join('');
-
-    // v13: Convert Dialog to DialogV2.wait()
-    const result = await foundry.applications.api.DialogV2.wait({
-      window: { 
+    return new Promise((resolve) => {
+      new Dialog({
         title: "Import Campaign Codex",
-        icon: "fas fa-upload"
-      },
-      content: `
-        <div class="form-group" style="flex-direction: column;text-align: left;">
-          <label>Select Journal Compendium to Import:</label>
-          <select name="journalCompendium" style="width: 100%;">
-            ${options}
-          </select>
-          <p style="font-size: 11px; color: #666; margin: 4px 0;">
-            The importer will automatically find related actor, item, and scene compendiums.
-          </p>
-        </div>
-        <div class="form-group" style="flex-direction: column;text-align: left;">
-          <label>
-            <input type="checkbox" name="skipExisting" checked />
-            Skip existing documents (use world versions)
-          </label>
-          <p style="font-size: 11px; color: #666; margin: 4px 0;">
-            <i class="fas fa-info-circle"></i> 
-            If checked, existing actors and items with the same name will not be imported.
-          </p>
-        </div>
-        <div class="form-group" style="flex-direction: column;text-align: left;">
-          <label>
-            <input type="checkbox" name="replaceExisting" />
-            Replace existing journals
-          </label>
-          <p style="font-size: 11px; color: #666; margin: 4px 0;">
-            <i class="fas fa-warning"></i> 
-            If checked, existing Campaign Codex journals will be replaced.
-          </p>
-        </div>
-      `,
-      buttons: [
-        {
-          action: "import",
-          icon: "fas fa-upload",
-          label: "Import",
-          default: true,
-          callback: (event, button, dialog) => {
-            // v13: Use vanilla DOM instead of jQuery
-            const form = button.form;
-            const journalCompendium = form.elements.journalCompendium?.value;
-            const replaceExisting = form.elements.replaceExisting?.checked || false;
-            const skipExisting = form.elements.skipExisting?.checked || false;
-            const selectedComp = ccCompendiums.find(c => c.name === journalCompendium);
-            
-            return { 
-              journalCompendium: selectedComp.pack,
-              baseName: selectedComp.label.replace(' - CC Journals', ''),
-              replaceExisting,
-              skipExisting
-            };
+        content: `
+          <form class="flexcol">
+            <div class="form-group" style="flex-direction: column;text-align: left;">
+              <label>Select Journal Compendium to Import:</label>
+              <select name="journalCompendium" style="width: 100%;">
+                ${options}
+              </select>
+              <p style="font-size: 11px; color: #666; margin: 4px 0;">
+                The importer will automatically find related actor, item, and scene compendiums.
+              </p>
+            </div>
+            <div class="form-group" style="flex-direction: column;text-align: left;">
+              <label>
+                <input type="checkbox" name="skipExisting" checked />
+                Skip existing documents (use world versions)
+              </label>
+              <p style="font-size: 11px; color: #666; margin: 4px 0;">
+                <i class="fas fa-info-circle"></i> 
+                If checked, existing actors and items with the same name will not be imported.
+              </p>
+            </div>
+            <div class="form-group" style="flex-direction: column;text-align: left;">
+              <label>
+                <input type="checkbox" name="replaceExisting" />
+                Replace existing journals
+              </label>
+              <p style="font-size: 11px; color: #666; margin: 4px 0;">
+                <i class="fas fa-warning"></i> 
+                If checked, existing Campaign Codex journals will be replaced.
+              </p>
+            </div>
+          </form>
+        `,
+        buttons: {
+          import: {
+            icon: '<i class="fas fa-upload"></i>',
+            label: "Import",
+            callback: (html) => {
+              const journalCompendium = html.find('[name="journalCompendium"]').val();
+              const replaceExisting = html.find('[name="replaceExisting"]').is(':checked');
+              const skipExisting = html.find('[name="skipExisting"]').is(':checked');
+              const selectedComp = ccCompendiums.find(c => c.name === journalCompendium);
+              resolve({ 
+                journalCompendium: selectedComp.pack,
+                baseName: selectedComp.label.replace(' - CC Journals', ''),
+                replaceExisting: replaceExisting,
+                skipExisting: skipExisting
+              });
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel",
+            callback: () => resolve(null)
           }
         },
-        {
-          action: "cancel",
-          icon: "fas fa-times",
-          label: "Cancel",
-          callback: () => null
-        }
-      ],
-      rejectClose: false, // v13: Handle null return instead of exceptions
-      modal: true
+        default: "import"
+      }).render(true);
     });
-
-    return result;
   }
 
   static async _findRelatedCompendiums(journalPack) {
@@ -445,50 +436,41 @@ export class SimpleCampaignCodexImporter {
   }
 
   static async _confirmImport(importData, baseName, skipExisting) {
-    const sceneInfo = importData.scenes ? `<li><strong>${importData.scenes.size}</strong> scenes</li>` : '';
-    const skipInfo = skipExisting ? 
-      '<p style="font-size: 12px; color: #666;"><i class="fas fa-info-circle"></i> Existing actors and items will be used instead of imported.</p>' : '';
-          
-    // v13: Convert Dialog to DialogV2.wait()
-    const result = await foundry.applications.api.DialogV2.wait({
-      window: { 
+    return new Promise((resolve) => {
+      const sceneInfo = importData.scenes ? `<li><strong>${importData.scenes.size}</strong> scenes</li>` : '';
+      const skipInfo = skipExisting ? 
+        '<p style="font-size: 12px; color: #666;"><i class="fas fa-info-circle"></i> Existing actors and items will be used instead of imported.</p>' : '';
+            
+      new Dialog({
         title: "Confirm Import",
-        icon: "fas fa-check"
-      },
-      content: `
-        <div class="flexcol">
-          <p>Ready to import the following from "<strong>${baseName}</strong>" compendium set:</p>
-          <ul style="margin: 0.5rem 0;">
-            <li><strong>${importData.journals.size}</strong> Campaign Codex journals</li>
-            <li><strong>${importData.actors.size}</strong> actors</li>
-            <li><strong>${importData.items.size}</strong> items</li>
-            ${sceneInfo}
-          </ul>
-          ${skipInfo}
-          <p><em>All relationships and folder structures will be preserved.</em></p>
-        </div>
-      `,
-      buttons: [
-        { 
-          action: "confirm",
-          icon: "fas fa-check",
-          label: "Import Now",
-          default: true,
-          callback: () => true 
+        content: `
+          <div class="flexcol">
+            <p>Ready to import the following from "<strong>${baseName}</strong>" compendium set:</p>
+            <ul style="margin: 0.5rem 0;">
+              <li><strong>${importData.journals.size}</strong> Campaign Codex journals</li>
+              <li><strong>${importData.actors.size}</strong> actors</li>
+              <li><strong>${importData.items.size}</strong> items</li>
+              ${sceneInfo}
+            </ul>
+            ${skipInfo}
+            <p><em>All relationships and folder structures will be preserved.</em></p>
+          </div>
+        `,
+        buttons: {
+          confirm: { 
+            icon: '<i class="fas fa-check"></i>', 
+            label: "Import Now", 
+            callback: () => resolve(true) 
+          },
+          cancel: { 
+            icon: '<i class="fas fa-times"></i>', 
+            label: "Cancel", 
+            callback: () => resolve(false) 
+          }
         },
-        { 
-          action: "cancel",
-          icon: "fas fa-times",
-          label: "Cancel",
-          callback: () => false 
-        }
-      ],
-      rejectClose: false, // v13: Handle null return instead of exceptions
-      modal: true
+        default: "confirm"
+      }).render(true);
     });
-
-    // v13: Handle null return (dialog closed)
-    return result === true;
   }
 
   static _showImportResults(results) {

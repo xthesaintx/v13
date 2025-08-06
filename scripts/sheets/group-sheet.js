@@ -1,197 +1,126 @@
-// scripts/sheets/group-sheet.js
+
 import { CampaignCodexBaseSheet } from './base-sheet.js';
 import { TemplateComponents } from './template-components.js';
 import { GroupLinkers } from './group-linkers.js';
 import { CampaignCodexLinkers } from './linkers.js';
 
 export class GroupSheet extends CampaignCodexBaseSheet {
-  constructor(options = {}) {
-    super(options);
+  constructor(document, options = {}) {
+    super(document, options);
     this._selectedSheet = null; 
     this._selectedSheetTab = 'info'; 
     this._expandedNodes = new Set(); 
     this._showTreeItems = false; 
+
   }
 
-  // v13: Replace defaultOptions() with DEFAULT_OPTIONS
-  static DEFAULT_OPTIONS = {
-    ...super.DEFAULT_OPTIONS,
-    classes: [...super.DEFAULT_OPTIONS.classes, "group-sheet"],
-    position: { 
-      width: 1200, 
-      height: 800 
-    },
-    // Add group-specific actions
-    actions: {
-      ...super.DEFAULT_OPTIONS.actions,
-      toggleTreeNode: GroupSheet.#onToggleTreeNode,
-      expandAll: GroupSheet.#onExpandAll,
-      collapseAll: GroupSheet.#onCollapseAll,
-      selectSheet: GroupSheet.#onSelectSheet,
-      toggleTreeItems: GroupSheet.#onToggleTreeItems,
-      selectedSheetTabChange: GroupSheet.#onSelectedSheetTabChange,
-      closeSelectedSheet: GroupSheet.#onCloseSelectedSheet,
-      removeMember: GroupSheet.#onRemoveMember,
-      focusItem: GroupSheet.#onFocusItem,
-      filterChange: GroupSheet.#onFilterChange,
-      tabChange: GroupSheet.#onTabChange,
-      sendToPlayer: GroupSheet.#onSendToPlayer
-    }
-  };
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      classes: [...super.defaultOptions.classes, "group-sheet"],
+      width: 1200,
+      height: 800
+    });
+  }
 
-  // v13: Define template parts
-  static PARTS = {
-    form: {
-      template: "modules/campaign-codex/templates/group-sheet.html"
-    }
-  };
+  get template() {
+    return "modules/campaign-codex/templates/group-sheet.html";
+  }
 
-  // v13: Replace getData() with _prepareContext()
-  async _prepareContext(options) {
-    const context = await super._prepareContext(options);
+
+async getData() {
+    const data = await super.getData();
     const groupData = this.document.getFlag("campaign-codex", "data") || {};
 
-    context.groupMembers = await GroupLinkers.getGroupMembers(groupData.members || []);
-    context.nestedData = await GroupLinkers.getNestedData(context.groupMembers);
-    context.sheetType = "group";
-    context.sheetTypeLabel = "Group Overview";
-    context.customImage = this.document.getFlag("campaign-codex", "image") || TemplateComponents.getAsset('image', 'group');
-    context.leftPanel = this._generateLeftPanel(context.groupMembers, context.nestedData);
+    data.groupMembers = await GroupLinkers.getGroupMembers(groupData.members || []);
+    data.nestedData = await GroupLinkers.getNestedData(data.groupMembers);
+    data.sheetType = "group";
+    data.sheetTypeLabel = "Group Overview";
+    data.customImage = this.document.getFlag("campaign-codex", "image") || TemplateComponents.getAsset('image', 'group');
+    data.leftPanel = this._generateLeftPanel(data.groupMembers, data.nestedData);
 
-    // Always generate tabs. A tab is active only if a sheet is NOT selected.
-    context.tabs = [
+    data.tabs = [
         { key: 'info', label: 'Overview', icon: 'fas fa-info-circle', active: !this._selectedSheet && this._currentTab === 'info' },
         { key: 'npcs', label: 'NPCs', icon: TemplateComponents.getAsset('icon', 'npc'), active: !this._selectedSheet && this._currentTab === 'npcs',
-          statistic: { value: context.nestedData.allNPCs.length }
+          statistic: { value: data.nestedData.allNPCs.length }
         },
         { key: 'inventory', label: 'Inventory', icon: 'fas fa-boxes', active: !this._selectedSheet && this._currentTab === 'inventory',
-          statistic: { value: context.nestedData.allItems.length }
+          statistic: { value: data.nestedData.allItems.length }
         },
         { key: 'locations', label: 'Locations', icon: TemplateComponents.getAsset('icon', 'location'), active: !this._selectedSheet && this._currentTab === 'locations',
-          statistic: { value: context.nestedData.allLocations.length }
+          statistic: { value: data.nestedData.allLocations.length }
         },
         { key: 'notes', label: 'Notes', icon: 'fas fa-sticky-note', active: !this._selectedSheet && this._currentTab === 'notes' }
     ];
 
-    // Conditionally prepare the main content
     if (this._selectedSheet) {
-        context.isShowingSelectedView = true;
-        context.selectedSheetContent = await this._generateSelectedSheetTab();
-        context.tabPanels = [];
+        data.isShowingSelectedView = true;
+        data.selectedSheetContent = await this._generateSelectedSheetTab();
+        data.tabPanels = [];
     } else {
-        context.isShowingSelectedView = false;
-        // Generate tab panels for the active overview tab
-        context.tabPanels = [
-            { key: 'info', active: this._currentTab === 'info', content: this._generateInfoTab(context) },
-            { key: 'npcs', active: this._currentTab === 'npcs', content: await this._generateNPCsTab(context) },
-            { key: 'inventory', active: this._currentTab === 'inventory', content: this._generateInventoryTab(context) },
-            { key: 'locations', active: this._currentTab === 'locations', content: this._generateLocationsTab(context) },
-            { key: 'notes', active: this._currentTab === 'notes', content: CampaignCodexBaseSheet.generateNotesTab(context) }
+        data.isShowingSelectedView = false;
+        data.tabPanels = [
+            { key: 'info', active: this._currentTab === 'info', content: this._generateInfoTab(data) },
+            { key: 'npcs', active: this._currentTab === 'npcs', content: await this._generateNPCsTab(data) },
+            { key: 'inventory', active: this._currentTab === 'inventory', content: this._generateInventoryTab(data) },
+            { key: 'locations', active: this._currentTab === 'locations', content: this._generateLocationsTab(data) },
+            { key: 'notes', active: this._currentTab === 'notes', content: CampaignCodexBaseSheet.generateNotesTab(data) }
         ];
     }
 
-    context.selectedSheet = this._selectedSheet;
-    context.selectedSheetTab = this._selectedSheetTab;
+    data.selectedSheet = this._selectedSheet;
+    data.selectedSheetTab = this._selectedSheetTab;
 
-    return context;
-  }
+    return data;
+}
 
-  // v13: Replace activateListeners with _onRender for remaining DOM setup
-  _onRender(context, options) {
-    super._onRender(context, options);
+  activateListeners(html) {
+    super.activateListeners(html);
+
+
     
-    // Setup any additional DOM interactions that can't be handled by actions
-    this._setupFilterInteractions();
-  }
+    html.find('.expand-toggle').click(this._onToggleTreeNode.bind(this));
+    html.find('.btn-expand-all').click(this._onExpandAll.bind(this));
+    html.find('.btn-collapse-all').click(this._onCollapseAll.bind(this));
+    html.find('.tree-label.clickable').click(this._onSelectSheet.bind(this));
+    html.find('.toggle-tree-items').click(this._onToggleTreeItems.bind(this));
 
-  // Static action methods for v13 actions system
-  static async #onToggleTreeNode(event, target) {
-    event.preventDefault();
-    event.stopPropagation();
-    return this._onToggleTreeNode(event);
-  }
 
-  static async #onExpandAll(event, target) {
-    return this._onExpandAll(event);
-  }
+    html.find('.selected-sheet-tab').click(this._onSelectedSheetTabChange.bind(this));
+    html.find('.btn-close-selected').click(this._onCloseSelectedSheet.bind(this));
 
-  static async #onCollapseAll(event, target) {
-    return this._onCollapseAll(event);
-  }
-
-  static async #onSelectSheet(event, target) {
-    return this._onSelectSheet(event);
-  }
-
-  static async #onToggleTreeItems(event, target) {
-    return this._onToggleTreeItems(event);
-  }
-
-  static async #onSelectedSheetTabChange(event, target) {
-    return this._onSelectedSheetTabChange(event);
-  }
-
-  static async #onCloseSelectedSheet(event, target) {
-    return this._onCloseSelectedSheet(event);
-  }
-
-  static async #onRemoveMember(event, target) {
-    return this._onRemoveMember(event);
-  }
-
-  static async #onFocusItem(event, target) {
-    return this._onFocusItem(event);
-  }
-
-  static async #onFilterChange(event, target) {
-    return this._onFilterChange(event);
-  }
-
-  static async #onTabChange(event, target) {
-    return this._onTabChange(event);
-  }
-
-  static async #onSendToPlayer(event, target) {
-    return this._onSendToPlayer(event);
-  }
-
-  // Convert jQuery-based filter setup to vanilla JavaScript
-  _setupFilterInteractions() {
-    // Set up filter functionality for NPC cards
-    const filterButtons = this.element.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-      btn.addEventListener('click', (event) => {
-        const filter = event.currentTarget.dataset.filter;
-        const cards = this.element.querySelectorAll('.group-npc-card');
-        
-        // Remove active class from all filter buttons
-        this.element.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        
-        // Filter cards
-        cards.forEach(card => {
-          const cardFilter = card.dataset.filter;
-          if (filter === 'all' || cardFilter.includes(filter)) {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
+    html.find('.btn-open-sheet').click(e => this._onOpenDocument(e, 'sheet'));
+    html.find('.btn-open-actor').click(e => this._onOpenDocument(e, 'actor'));
+    html.find('.group-location-card').click(e => this._onOpenDocument(e, 'sheet'));
+    html.find('.card-image-clickable').click(e => {
+        e.stopPropagation();
+        this._onOpenDocument(e, 'sheet');
     });
+
+    
+    html.find('.btn-remove-member').click(this._onRemoveMember.bind(this));
+    html.find('.btn-focus-item').click(this._onFocusItem.bind(this));
+
+    
+    html.find('.filter-btn').click(this._onFilterChange.bind(this));
+
+    
+    html.find('.group-tab').click(this._onTabChange.bind(this));
+
+    
+    html.find('.btn-send-to-player').click(this._onSendToPlayer.bind(this));
   }
 
-  _onToggleTreeItems(event) {
+
+_onToggleTreeItems(event) {
     event.preventDefault();
     this._showTreeItems = !this._showTreeItems;
     this.render(false);
   }
 
-  _onSelectSheet(event) {
+_onSelectSheet(event) {
     event.preventDefault();
     event.stopPropagation();
 
-    // Check if click was on expand toggle or actions
     if (event.target.classList.contains('expand-toggle') || 
         event.target.closest('.tree-actions') || 
         event.target.classList.contains('fa-chevron-right') ||
@@ -205,15 +134,16 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     const name = event.currentTarget.textContent.trim();
 
     this._selectedSheet = { uuid, type, name };
-    this._selectedSheetTab = 'info'; // Reset to info tab on new selection
+    this._selectedSheetTab = 'info'; 
     this.render(false);
-  }
+}
+
 
   _onCloseSelectedSheet(event) {
     event.preventDefault();
     this._selectedSheet = null;
     this._selectedSheetTab = 'info';
-    this._currentTab = 'info'; // Switch back to overview
+    this._currentTab = 'info'; 
     this.render(false);
   }
 
@@ -229,20 +159,21 @@ export class GroupSheet extends CampaignCodexBaseSheet {
 
     const selectedDoc = await fromUuid(this._selectedSheet.uuid);
     if (!selectedDoc) {
-      this._selectedSheet = null; // Clear the invalid selection
+      this._selectedSheet = null; 
       return '<p>Selected sheet not found. Please re-select from the tree.</p>';
     }
 
     const selectedData = selectedDoc.getFlag("campaign-codex", "data") || {};
 
-    let actorButtonHtml = '';
-    if (this._selectedSheet.type === 'npc' && selectedData.linkedActor) {
-      actorButtonHtml = `
-        <button type="button" data-action="openDocument" data-type="actor" data-actor-uuid="${selectedData.linkedActor}" title="Open Actor Sheet">
-          <i class="fas fa-user"></i>
-        </button>
-      `;
-    }
+  let actorButtonHtml = '';
+  if (this._selectedSheet.type === 'npc' && selectedData.linkedActor) {
+    actorButtonHtml = `
+      <button type="button" class="btn-open-actor" data-actor-uuid="${selectedData.linkedActor}" title="Open Actor Sheet">
+        <i class="fas fa-user"></i>
+      </button>
+    `;
+  }
+
 
     let calculatedCounts = {};
     if (this._selectedSheet.type === 'location') {
@@ -264,7 +195,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
           </div>
           <div class="selected-sheet-actions">
           ${actorButtonHtml}
-            <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${this._selectedSheet.uuid}" title="Open Full Sheet">
+            <button type="button" class="btn-open-sheet" data-sheet-uuid="${this._selectedSheet.uuid}" title="Open Full Sheet">
               <i class="fas fa-external-link-alt"></i>
             </button>
           </div>
@@ -272,7 +203,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
 
         <nav class="selected-sheet-tabs">
           ${subTabs.map(tab => `
-            <div class="selected-sheet-tab ${tab.key === this._selectedSheetTab ? 'active' : ''}" data-action="selectedSheetTabChange" data-tab="${tab.key}">
+            <div class="selected-sheet-tab ${tab.key === this._selectedSheetTab ? 'active' : ''}" data-tab="${tab.key}">
               <i class="${tab.icon}"></i>
               <span>${tab.label}</span>
               ${tab.count !== undefined ? `<span class="tab-count">(${tab.count})</span>` : ''}
@@ -327,13 +258,13 @@ export class GroupSheet extends CampaignCodexBaseSheet {
   }
 
   async _generateSelectedSheetContent(selectedDoc, selectedData, activeTab) {
-    const enrichedDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(selectedData.description || "", { 
+    const enrichedDescription = await TextEditor.enrichHTML(selectedData.description || "", { 
       async: true, 
       secrets: selectedDoc.isOwner 
     });
     const systemClass = game.system.id === 'dnd5e' ? ' dnd5e' : '';
     const journalClass = game.system.id === 'dnd5e' ? ' journal-entry-content' : ''; 
-    const enrichedNotes = await foundry.applications.ux.TextEditor.implementation.enrichHTML(selectedData.notes || "", { 
+    const enrichedNotes = await TextEditor.enrichHTML(selectedData.notes || "", { 
       async: true, 
       secrets: selectedDoc.isOwner 
     });
@@ -372,7 +303,6 @@ export class GroupSheet extends CampaignCodexBaseSheet {
   }
 
   async _generateSelectedNPCsContent(selectedDoc, selectedData) {
-    // For locations, get both direct and shop NPCs
     if (this._selectedSheet.type === 'location') {
       const directNPCs = await CampaignCodexLinkers.getDirectNPCs(selectedDoc, selectedData.linkedNPCs || []);
       const shopNPCs = await CampaignCodexLinkers.getShopNPCs(selectedDoc, selectedData.linkedShops || []);
@@ -383,7 +313,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
       }
 
       const dropToMapBtn = canvas.scene ? `
-        <button type="button" class="refresh-btn" data-action="dropNPCsToMap" data-sheet-uuid="${this._selectedSheet.uuid}">
+        <button type="button" class="refresh-btn npcs-to-map-button" data-sheet-uuid="${this._selectedSheet.uuid}">
           <i class="fas fa-map"></i> Drop Direct NPCs to Map
         </button>
       ` : '';
@@ -411,11 +341,11 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                     ${npc.actor ? `<span class="npc-type">${npc.actor.type}</span>` : ''}
                   </div>
                   <div class="npc-actions">
-                    <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
+                    <button type="button" class="btn-open-sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
                       <i class="fas fa-external-link-alt"></i>
                     </button>
                     ${npc.actor ? `
-                      <button type="button" data-action="openDocument" data-type="actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
+                      <button type="button" class="btn-open-actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
                         <i class="fas fa-user"></i>
                       </button>
                     ` : ''}
@@ -432,7 +362,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
           <div class="npc-section">
             <h4 style="color: var(--cc-main-text); font-size: 16px; font-weight: 600; margin: 16px 0 12px 0; border-bottom: 1px solid #dee2e6; padding-bottom: 4px;">
               <i class="fas fa-book-open" style="color: var(--cc-accent); margin-right: 8px;"></i>
-              Shop NPCs (${shopNPCs.length})
+              Entry NPCs (${shopNPCs.length})
             </h4>
             <div class="npc-list">
               ${shopNPCs.map(npc => `
@@ -446,11 +376,11 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                     </div>
                   </div>
                   <div class="npc-actions">
-                    <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
+                    <button type="button" class="btn-open-sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
                       <i class="fas fa-external-link-alt"></i>
                     </button>
                     ${npc.actor ? `
-                      <button type="button" data-action="openDocument" data-type="actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
+                      <button type="button" class="btn-open-actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
                         <i class="fas fa-user"></i>
                       </button>
                     ` : ''}
@@ -466,7 +396,6 @@ export class GroupSheet extends CampaignCodexBaseSheet {
       return content;
     } 
     
-    // For other sheet types (shop, etc.)
     const npcs = await CampaignCodexLinkers.getLinkedNPCs(selectedDoc, selectedData.linkedNPCs || []);
     
     if (npcs.length === 0) {
@@ -474,7 +403,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     }
 
     const dropToMapBtn = canvas.scene ? `
-      <button type="button" data-action="dropNPCsToMap" data-sheet-uuid="${this._selectedSheet.uuid}">
+      <button type="button" class="npcs-to-map-button" data-sheet-uuid="${this._selectedSheet.uuid}">
         <i class="fas fa-map"></i> Drop NPCs to Map
       </button>
     ` : '';
@@ -494,11 +423,11 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                 ${npc.actor ? `<span class="npc-type">${npc.actor.type}</span>` : ''}
               </div>
               <div class="npc-actions">
-                <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
+                <button type="button" class="btn-open-sheet" data-sheet-uuid="${npc.uuid}" title="Open NPC Sheet">
                   <i class="fas fa-external-link-alt"></i>
                 </button>
                 ${npc.actor ? `
-                  <button type="button" data-action="openDocument" data-type="actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
+                  <button type="button" class="btn-open-actor" data-actor-uuid="${npc.actor.uuid}" title="Open Actor Sheet">
                     <i class="fas fa-user"></i>
                   </button>
                 ` : ''}
@@ -527,7 +456,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                 <h5>${shop.name}</h5>
               </div>
               <div class="shop-actions">
-                <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${shop.uuid}" title="Open Entry Sheet">
+                <button type="button" class="btn-open-sheet" data-sheet-uuid="${shop.uuid}" title="Open Entry Sheet">
                   <i class="fas fa-external-link-alt"></i>
                 </button>
               </div>
@@ -555,7 +484,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                 <h5>${location.name}</h5>
               </div>
               <div class="location-actions">
-                <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${location.uuid}" title="Open Location Sheet">
+                <button type="button" class="btn-open-sheet" data-sheet-uuid="${location.uuid}" title="Open Location Sheet">
                   <i class="fas fa-external-link-alt"></i>
                 </button>
               </div>
@@ -566,6 +495,9 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     `;
   }
 
+
+
+ 
   _generateSelectedInfoContent(selectedDoc, selectedData, enrichedDescription) {
      const systemClass = game.system.id === 'dnd5e' ? ' dnd5e' : '';
     const journalClass = game.system.id === 'dnd5e' ? ' journal-entry-content' : ''; 
@@ -599,7 +531,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                 <span class="associate-relationship">${associate.relationship || 'Associate'}</span>
               </div>
               <div class="associate-actions">
-                <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${associate.uuid}" title="Open Associate Sheet">
+                <button type="button" class="btn-open-sheet" data-sheet-uuid="${associate.uuid}" title="Open Associate Sheet">
                   <i class="fas fa-external-link-alt"></i>
                 </button>
               </div>
@@ -628,9 +560,9 @@ export class GroupSheet extends CampaignCodexBaseSheet {
                 <span class="item-details">Qty: ${item.quantity} | Price: ${item.finalPrice}${item.currency}</span>
               </div>
               <div class="item-actions">
-                <button type="button" data-action="sendToPlayer" data-sheet-uuid="${this._selectedSheet.uuid}" data-item-uuid="${item.itemUuid}" title="Send to Player">
+                <button type="button" class="btn-send-to-player" data-sheet-uuid="${this._selectedSheet.uuid}" data-item-uuid="${item.itemUuid}" title="Send to Player">
                   <i class="fas fa-paper-plane"></i> </button>
-                <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${item.itemUuid}" title="Open Item">
+                <button type="button" class="btn-open-sheet" data-sheet-uuid="${item.itemUuid}" title="Open Item">
                   <i class="${TemplateComponents.getAsset('icon', 'item')}"></i> </button>
               </div>
             </div>
@@ -704,7 +636,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     
     const sheetUuid = event.currentTarget.dataset.sheetUuid;
     if (!sheetUuid) {
-      const data = await this._prepareContext();
+      const data = await this.getData();
       if (data.nestedData.allNPCs && data.nestedData.allNPCs.length > 0) {
         await this._onDropNPCsToMap(data.nestedData.allNPCs, { 
           title: `Drop ${this.document.name} NPCs to Map` 
@@ -731,6 +663,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
         if (selectedData.linkedActor) {
           npcsToMap = [selectedDoc];
         }
+        
       } else if (selectedType === 'shop' || selectedType === 'location') {
         const npcs = await CampaignCodexLinkers.getLinkedNPCs(selectedDoc, selectedData.linkedNPCs || []);
         npcsToMap = npcs.filter(npc => npc.actor);
@@ -765,7 +698,6 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     }
   }
 
-  // v13: Updated drop handling with vanilla JavaScript
   async _onDrop(event) {
     event.preventDefault();
     if (this._dropping) return;
@@ -801,13 +733,13 @@ export class GroupSheet extends CampaignCodexBaseSheet {
       <div class="group-tree">
         <div class="tree-header">
           <h3><i class="fas fa-sitemap"></i> Group Structure</h3>
-          <button type="button" data-action="expandAll" title="Expand All" style="width:32px">
+          <button type="button" class="btn-expand-all" title="Expand All" style="width:32px">
             <i class="fas fa-expand-arrows-alt"></i>
           </button>
-          <button type="button" data-action="collapseAll" title="Collapse All" style="width:32px">
+          <button type="button" class="btn-collapse-all" title="Collapse All" style="width:32px">
             <i class="fas fa-compress-arrows-alt"></i>
           </button>
-          <button type="button" data-action="toggleTreeItems" class="${toggleClass}" title="Hide/Show Inventory Items" style="width:32px">
+          <button type="button" class="toggle-tree-items ${toggleClass}" title="Hide/Show Inventory Items" style="width:32px">
             <i class="fas fa-tag"></i>
           </button>
         </div>
@@ -834,18 +766,18 @@ export class GroupSheet extends CampaignCodexBaseSheet {
       html += `
         <div class="tree-node ${isSelected ? 'selected' : ''}" data-type="${node.type}" data-sheet-uuid="${node.uuid}">
           <div class="tree-node-header ${hasChildren ? 'expandable' : ''}">
-            ${hasChildren ? `<i class="fas ${isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} expand-icon" data-action="toggleTreeNode"></i>` : '<i class="tree-spacer"></i>'}
+            ${hasChildren ? `<i class="fas ${isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} expand-icon expand-toggle"></i>` : '<i class="tree-spacer"></i>'}
             <i class="${TemplateComponents.getAsset('icon', node.type)} node-icon" alt="${node.name}">&nbsp;</i>
-            <span class="tree-label ${clickableClass}" ${isClickable ? `data-action="selectSheet"` : ''}> ${node.name}</span>
+            <span class="tree-label ${clickableClass}"> ${node.name}</span>
             
             <div class="tree-actions">
-              <button type="button" data-action="removeMember" data-sheet-uuid="${node.uuid}" title="Remove from Group">
+              <button type="button" class="btn-remove-member" data-sheet-uuid="${node.uuid}" title="Remove from Group">
                 <i class="fas fa-times"></i>
               </button>
             </div>
             <span class="tree-type">${node.type}</span>         
             <div class="tree-actions">
-              <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${node.uuid}" title="Open Sheet">
+              <button type="button" class="btn-open-sheet" data-sheet-uuid="${node.uuid}" title="Open Sheet">
                 <i class="fas fa-external-link-alt"></i>
               </button>
             </div>
@@ -984,10 +916,11 @@ export class GroupSheet extends CampaignCodexBaseSheet {
       ${TemplateComponents.contentHeader('fas fa-map-marker-alt', 'All Locations in Group')}
       
       <div class="locations-grid">
-        ${this._generateLocationCards(data.nestedData.allLocations)}
+       ${this._generateLocationCards(data.nestedData.allLocations)}
       </div>
     `;
   }
+
 
   async _generateNPCCards(npcs) {
     const cardPromises = npcs.map(async npc => {
@@ -1004,11 +937,11 @@ export class GroupSheet extends CampaignCodexBaseSheet {
             <div class="npc-source">${npc.sourceLocation || npc.sourceShop || 'Direct'}</div>
           </div>
           <div class="npc-actions">
-            <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${npc.uuid}">
+            <button type="button" class="btn-open-sheet" data-sheet-uuid="${npc.uuid}">
               <i class="fas fa-external-link-alt"></i>
             </button>
             ${npc.actor ? `
-              <button type="button" data-action="openDocument" data-type="actor" data-actor-uuid="${npc.actor.uuid}">
+              <button type="button" class="btn-open-actor" data-actor-uuid="${npc.actor.uuid}">
                 <i class="fas fa-user"></i>
               </button>
             ` : ''}
@@ -1021,22 +954,25 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     return htmlCards.join('');
   }
 
+
   _generateLocationCards(locations) {
     return locations.map(location => `
-      <div class="group-location-card" data-action="openDocument" data-type="sheet" data-sheet-uuid="${location.uuid}">
+      <div class="group-location-card" data-sheet-uuid="${location.uuid}">
         <div class="location-image">
           <img class="card-image-clickable" data-sheet-uuid="${location.uuid}" src="${TemplateComponents.getAsset('image', location.type, location.img)}" alt="${location.name}">
         </div>
         <div class="location-info">
           <h4 class="location-name">${location.name}</h4>
           <div class="location-stats">
-            ${location.npcCount || 0} NPCs | ${location.shopCount || 0} Shops
+            ${location.npcCount || 0} NPCs | ${location.shopCount || 0} Entries
           </div>
           ${location.region ? `<div class="location-region">Region: ${location.region}</div>` : ''}
         </div>
       </div>
     `).join('');
   }
+
+
 
   _generateInventoryByShop(nestedData) {
     let html = '';
@@ -1054,7 +990,7 @@ export class GroupSheet extends CampaignCodexBaseSheet {
               <h4 class="shop-name">${shop.name}</h4>
               <div class="shop-stats">${items.length} items | ${totalValue}gp total</div>
             </div>
-            <button type="button" data-action="openDocument" data-type="sheet" data-sheet-uuid="${shopUuid}">
+            <button type="button" class="btn-open-sheet" data-sheet-uuid="${shopUuid}">
               <i class="fas fa-external-link-alt"></i>
             </button>
           </div>
@@ -1142,7 +1078,6 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     ui.notifications.info("Removed member from group");
   }
 
-  // v13: Convert jQuery tree node handling to vanilla JavaScript
   _onToggleTreeNode(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -1168,13 +1103,12 @@ export class GroupSheet extends CampaignCodexBaseSheet {
     }
   }
 
-  // v13: Convert jQuery expand all to vanilla JavaScript
   _onExpandAll(event) {
-    this.element.querySelectorAll('.tree-node').forEach(el => {
-      const uuid = el.dataset.sheetUuid;
-      if (uuid && el.querySelector('.tree-children')) {
-        this._expandedNodes.add(uuid);
-      }
+    this.element.find('.tree-node').each((i, el) => {
+        const uuid = el.dataset.sheetUuid;
+        if (uuid && el.querySelector('.tree-children')) {
+            this._expandedNodes.add(uuid);
+        }
     });
     this.render(false);
   }
@@ -1186,22 +1120,21 @@ export class GroupSheet extends CampaignCodexBaseSheet {
 
   _onFocusItem(event) {
     const uuid = event.currentTarget.dataset.sheetUuid;
-    // Implementation depends on the tab content
   }
 
   _onFilterChange(event) {
     const filter = event.currentTarget.dataset.filter;
-    const cards = this.element.querySelectorAll('.group-npc-card');
+    const cards = this.element.find('.group-npc-card');
     
-    this.element.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    this.element.find('.filter-btn').removeClass('active');
     event.currentTarget.classList.add('active');
     
-    cards.forEach(card => {
-      const cardFilter = card.dataset.filter;
+    cards.each(function() {
+      const cardFilter = this.dataset.filter;
       if (filter === 'all' || cardFilter.includes(filter)) {
-        card.style.display = 'flex';
+        this.style.display = 'flex';
       } else {
-        card.style.display = 'none';
+        this.style.display = 'none';
       }
     });
   }

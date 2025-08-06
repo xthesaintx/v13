@@ -310,73 +310,64 @@ static _prepareJournalUpdate(journal, uuidMap) {
 
 
 static async _getExportConfig() {
-  // v13: Convert Dialog to DialogV2.wait()
-  const result = await foundry.applications.api.DialogV2.wait({
-    window: { 
+  return new Promise((resolve) => {
+    new Dialog({
       title: "Export Campaign Codex",
-      icon: "fas fa-download"
-    },
-    content: `
-      <div class="form-group">
-        <label>Compendium Set Name:</label>
-        <input type="text" name="baseName" value="My Campaign" style="width: 100%;" />
-        <p style="font-size: 11px; color: #666; margin: 4px 0;">
-          This will create a set of compendiums, e.g., <strong>[Name] - CC Journals</strong>.
-        </p>
-      </div>
-      <div class="form-group">
-        <label>
-          <input type="checkbox" name="performCleanup" checked />
-          Perform cleanup before export
-        </label>
-        <p style="font-size: 11px; color: #666; margin: 4px 0;">
-          <i class="fas fa-info-circle"></i> 
-          Removes broken links and fixes orphaned relationships before exporting.
-        </p>
-      </div>
-      <div class="form-group">
-        <label>
-          <input type="checkbox" name="exportScenes" />
-          Export linked scenes
-        </label>
-        <p style="font-size: 11px; color: #666; margin: 4px 0;">
-          <i class="fas fa-map"></i> 
-          Creates a scenes compendium and exports all scenes linked to Campaign Codex documents.
-        </p>
-      </div>
-    `,
-    buttons: [
-      {
-        action: "export",
-        icon: "fas fa-download",
-        label: "Export",
-        default: true,
-        callback: (event, button, dialog) => {
-          // v13: Use vanilla DOM instead of jQuery
-          const form = button.form;
-          const baseName = form.elements.baseName?.value?.trim() || "My Campaign";
-          const performCleanup = form.elements.performCleanup?.checked || false;
-          const exportScenes = form.elements.exportScenes?.checked || false;
-          
-          return { 
-            baseName,
-            performCleanup,
-            exportScenes
-          };
+      content: `
+        <form class="flexcol">
+          <div class="form-group">
+            <label>Compendium Set Name:</label>
+            <input type="text" name="baseName" value="My Campaign" style="width: 100%;" />
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">
+              This will create a set of compendiums, e.g., <strong>[Name] - CC Journals</strong>.
+            </p>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" name="performCleanup" checked />
+              Perform cleanup before export
+            </label>
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">
+              <i class="fas fa-info-circle"></i> 
+              Removes broken links and fixes orphaned relationships before exporting.
+            </p>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" name="exportScenes" />
+              Export linked scenes
+            </label>
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">
+              <i class="fas fa-map"></i> 
+              Creates a scenes compendium and exports all scenes linked to Campaign Codex documents.
+            </p>
+          </div>
+        </form>
+      `,
+      buttons: {
+        export: {
+          icon: '<i class="fas fa-download"></i>',
+          label: "Export",
+          callback: (html) => {
+            const baseName = html.find('[name="baseName"]').val()?.trim();
+            const performCleanup = html.find('[name="performCleanup"]').is(':checked');
+            const exportScenes = html.find('[name="exportScenes"]').is(':checked');
+            resolve({ 
+              baseName: baseName || "My Campaign",
+              performCleanup: performCleanup,
+              exportScenes: exportScenes
+            });
+          }
+        },
+        cancel: {
+          icon: '<i class="fas fa-times"></i>',
+          label: "Cancel",
+          callback: () => resolve(null)
         }
       },
-      {
-        action: "cancel",
-        icon: "fas fa-times",
-        label: "Cancel",
-        callback: () => null
-      }
-    ],
-    rejectClose: false, // v13: Handle null return instead of exceptions
-    modal: true
+      default: "export"
+    }).render(true);
   });
-
-  return result;
 }
 
 
@@ -428,14 +419,13 @@ static async _createCompendiumSet(baseName, exportScenes = false) {
     const existing = game.packs.get(packId);
 
     if (existing) {
-      // v13: Convert Dialog.confirm to DialogV2.confirm
-      const confirmed = await foundry.applications.api.DialogV2.confirm({
-        window: { title: "Overwrite Compendium?" },
+      const confirmed = await Dialog.confirm({
+        title: "Overwrite Compendium?",
         content: `<p>A compendium named "<strong>${name}</strong>" already exists. Do you want to delete and recreate it? This cannot be undone.</p>`,
-        rejectClose: false, // v13: Handle null return
-        modal: true
+        yes: () => true,
+        no: () => false,
+        defaultYes: false
       });
-      
       if (!confirmed) {
         throw new Error(`User cancelled overwrite of compendium: ${name}`);
       }
@@ -467,46 +457,29 @@ static async _createCompendiumSet(baseName, exportScenes = false) {
    * @returns {Promise<boolean>}
    */
 static async _confirmExport(exportData, baseName, exportScenes = false) {
-  const sceneInfo = exportScenes ? `<li><strong>${exportData.scenes?.size || 0}</strong> linked scenes</li>` : '';
-  
-  // v13: Convert Dialog to DialogV2.wait()
-  const result = await foundry.applications.api.DialogV2.wait({
-    window: { 
+  return new Promise((resolve) => {
+    const sceneInfo = exportScenes ? `<li><strong>${exportData.scenes?.size || 0}</strong> linked scenes</li>` : '';
+    
+    new Dialog({
       title: "Confirm Export",
-      icon: "fas fa-check"
-    },
-    content: `
-      <div class="flexcol">
-        <p>Ready to export the following to the "<strong>${baseName}</strong>" compendium set:</p>
-        <ul style="margin: 0.5rem 0;">
-          <li><strong>${exportData.journals.size}</strong> Campaign Codex journals</li>
-          <li><strong>${exportData.actors.size}</strong> linked actors</li>
-          <li><strong>${exportData.items.size}</strong> linked items</li>
-          ${sceneInfo}
-        </ul>
-        <p><em>All relationships and folders will be preserved.</em></p>
-      </div>
-    `,
-    buttons: [
-      { 
-        action: "confirm",
-        icon: "fas fa-check",
-        label: "Export Now",
-        default: true,
-        callback: () => true 
+      content: `
+        <div class="flexcol">
+          <p>Ready to export the following to the "<strong>${baseName}</strong>" compendium set:</p>
+          <ul style="margin: 0.5rem 0;">
+            <li><strong>${exportData.journals.size}</strong> Campaign Codex journals</li>
+            <li><strong>${exportData.actors.size}</strong> linked actors</li>
+            <li><strong>${exportData.items.size}</strong> linked items</li>
+            ${sceneInfo}
+          </ul>
+          <p><em>All relationships and folders will be preserved.</em></p>
+        </div>
+      `,
+      buttons: {
+        confirm: { icon: '<i class="fas fa-check"></i>', label: "Export Now", callback: () => resolve(true) },
+        cancel: { icon: '<i class="fas fa-times"></i>', label: "Cancel", callback: () => resolve(false) }
       },
-      { 
-        action: "cancel",
-        icon: "fas fa-times",
-        label: "Cancel",
-        callback: () => false 
-      }
-    ],
-    rejectClose: false, // v13: Handle null return instead of exceptions
-    modal: true
+      default: "confirm"
+    }).render(true);
   });
-
-  // v13: Handle null return (dialog closed)
-  return result === true;
 }
 }

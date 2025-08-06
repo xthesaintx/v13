@@ -54,7 +54,7 @@ export class NPCDropper {
   }
 
   /**
-   * Shows the NPC selection dialog using DialogV2
+   * Shows the NPC selection dialog
    * @param {Array} npcs - NPCs to show in dialog
    * @param {Object} options - Dialog options
    */
@@ -91,56 +91,47 @@ export class NPCDropper {
       </div>
     `;
 
-    // Convert to DialogV2.wait() pattern
-    const result = await foundry.applications.api.DialogV2.wait({
-      window: { title: options.title || "Drop NPCs to Map" },
-      content: content,
-      buttons: [
-        {
-          action: "drop",
-          icon: "fas fa-map",
-          label: "Start Placing",
-          default: true,
-          callback: async (event, button, dialog) => {
-            const form = button.form;
-            const selectedNPCIds = [];
-            
-            // Replace jQuery .find().each() with vanilla JS
-            const checkboxes = form.querySelectorAll('input[name="selected-npcs"]:checked');
-            checkboxes.forEach(checkbox => {
-              selectedNPCIds.push(checkbox.value);
-            });
-            
-            // Replace jQuery .prop() with vanilla JS
-            const startHiddenInput = form.querySelector('input[name="start-hidden"]');
-            const startHidden = startHiddenInput ? startHiddenInput.checked : false;
-            
-            if (selectedNPCIds.length > 0) {
-              const selectedNPCs = npcs.filter(npc => 
-                selectedNPCIds.includes(npc.uuid || npc.id)
-              );
-              
-              return await this._startTokenPlacement(selectedNPCs, {
-                startHidden,
-                ...options
+    return new Promise((resolve) => {
+      new Dialog({
+        title: options.title || "Drop NPCs to Map",
+        content: content,
+        buttons: {
+          drop: {
+            icon: '<i class="fas fa-map"></i>',
+            label: "Start Placing",
+            callback: async (html) => {
+              const selectedNPCIds = [];
+              html.find('input[name="selected-npcs"]:checked').each(function() {
+                selectedNPCIds.push(this.value);
               });
-            } else {
-              ui.notifications.warn("No NPCs selected!");
-              return { success: 0, failed: 0, imported: 0 };
+              
+              const startHidden = html.find('input[name="start-hidden"]').prop('checked');
+              
+              if (selectedNPCIds.length > 0) {
+                const selectedNPCs = npcs.filter(npc => 
+                  selectedNPCIds.includes(npc.uuid || npc.id)
+                );
+                
+                const result = await this._startTokenPlacement(selectedNPCs, {
+                  startHidden,
+                  ...options
+                });
+                resolve(result);
+              } else {
+                ui.notifications.warn("No NPCs selected!");
+                resolve({ success: 0, failed: 0, imported: 0 });
+              }
             }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel",
+            callback: () => resolve(null)
           }
         },
-        {
-          action: "cancel",
-          icon: "fas fa-times",
-          label: "Cancel",
-          callback: () => null
-        }
-      ],
-      rejectClose: false // v13 default behavior - returns null on close
+        default: "drop"
+      }).render(true);
     });
-
-    return result;
   }
 
   /**

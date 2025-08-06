@@ -1,3 +1,4 @@
+
 export class CampaignCodexJournalConverter {
 
   /**
@@ -217,85 +218,78 @@ export class CampaignCodexJournalConverter {
     const folders = game.folders.filter(f => f.type === "JournalEntry");
     const folderOptions = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
-    // v13: Convert Dialog to DialogV2.wait()
-    const result = await foundry.applications.api.DialogV2.wait({
-      window: { 
+    return new Promise((resolve) => {
+      new Dialog({
         title: "Export to Standard Journal",
-        icon: "fas fa-book"
-      },
-      content: `
-        <div class="form-group">
-          <label>Export Name:</label>
-          <input type="text" name="exportName" value="${sourceJournal.name} (Exported)" style="width: 100%;" />
-        </div>
-        <div class="form-group">
-          <label>Target Folder:</label>
-          <select name="folderId" style="width: 100%;">
-            <option value="">-- Same as Original --</option>
-            <option value="root">-- Root Directory --</option>
-            ${folderOptions}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>
-            <input type="checkbox" name="openAfterExport" checked />
-            Open exported journal after creation
-          </label>
-        </div>
-        <div class="form-group">
-          <p style="font-size: 12px; color: #666; margin: 8px 0;">
-            <i class="fas fa-info-circle"></i> 
-            This will create a standard Foundry journal with all Campaign Codex data formatted as HTML content.
-          </p>
-        </div>
-      `,
-      buttons: [
-        {
-          action: "export",
-          icon: "fas fa-book",
-          label: "Export",
-          default: true,
-          callback: async (event, button, dialog) => {
-            // v13: Use vanilla DOM instead of jQuery
-            const form = button.form;
-            const formData = new FormDataExtended(form);
-            const formObject = formData.object;
-            
-            const options = {
-              namePrefix: "",
-              openAfterExport: formObject.openAfterExport
-            };
+        content: `
+          <form class="flexcol">
+            <div class="form-group">
+              <label>Export Name:</label>
+              <input type="text" name="exportName" value="${sourceJournal.name} (Exported)" style="width: 100%;" />
+            </div>
+            <div class="form-group">
+              <label>Target Folder:</label>
+              <select name="folderId" style="width: 100%;">
+                <option value="">-- Same as Original --</option>
+                <option value="root">-- Root Directory --</option>
+                ${folderOptions}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" name="openAfterExport" checked />
+                Open exported journal after creation
+              </label>
+            </div>
+            <div class="form-group">
+              <p style="font-size: 12px; color: #666; margin: 8px 0;">
+                <i class="fas fa-info-circle"></i> 
+                This will create a standard Foundry journal with all Campaign Codex data formatted as HTML content.
+              </p>
+            </div>
+          </form>
+        `,
+        buttons: {
+          export: {
+            icon: '<i class="fas fa-book"></i>',
+            label: "Export",
+            callback: async (html) => {
+              const formData = new FormDataExtended(html.find('form')[0]).object;
+              
+              const options = {
+                namePrefix: "",
+                openAfterExport: formData.openAfterExport
+              };
 
-            if (formObject.folderId === "root") {
-              options.folderId = null;
-            } else if (formObject.folderId && formObject.folderId !== "") {
-              options.folderId = formObject.folderId;
+              if (formData.folderId === "root") {
+                options.folderId = null;
+              } else if (formData.folderId && formData.folderId !== "") {
+                options.folderId = formData.folderId;
+              }
+
+              let customName = null;
+              if (formData.exportName && formData.exportName.trim() !== "") {
+                customName = formData.exportName.trim();
+                options.namePrefix = "";
+              }
+
+              const result = await this.exportToStandardJournal(sourceJournal, {
+                ...options,
+                customName: customName
+              });
+              
+              resolve(result);
             }
-
-            let customName = null;
-            if (formObject.exportName && formObject.exportName.trim() !== "") {
-              customName = formObject.exportName.trim();
-              options.namePrefix = "";
-            }
-
-            return await this.exportToStandardJournal(sourceJournal, {
-              ...options,
-              customName: customName
-            });
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: "Cancel",
+            callback: () => resolve(null)
           }
         },
-        {
-          action: "cancel",
-          icon: "fas fa-times",
-          label: "Cancel",
-          callback: () => null
-        }
-      ],
-      rejectClose: false, // v13: Handle null return instead of exceptions
-      modal: true
+        default: "export"
+      }).render(true);
     });
-
-    return result;
   }
 
 
