@@ -1,6 +1,6 @@
 import { CampaignCodexBaseSheet } from './base-sheet.js';
 import { TemplateComponents } from './template-components.js';
-import { DescriptionEditor } from './editors/description-editor.js';
+// import { DescriptionEditor } from './editors/description-editor.js';
 import { CampaignCodexLinkers } from './linkers.js';
 
 export class RegionSheet extends CampaignCodexBaseSheet {

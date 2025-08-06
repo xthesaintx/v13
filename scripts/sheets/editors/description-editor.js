@@ -1,9 +1,7 @@
-// Fixed DescriptionEditor with proper v13 action handlers
-
-// v13 ApplicationV2 imports
 const { HandlebarsApplicationMixin } = foundry.applications.api;
-// const { ApplicationV2 } = foundry.applications.api;
-const { DialogV2} =foundry.applications.api;
+const { DialogV2 } = foundry.applications.api;
+const { FormDataExtended } = foundry.applications.ux;
+const { DocumentSheetV2 } = foundry.applications.api; // This is only needed if you are extending it directly
 
 export class DescriptionEditor extends HandlebarsApplicationMixin(DialogV2) {
   constructor(options = {}) {
@@ -23,7 +21,6 @@ export class DescriptionEditor extends HandlebarsApplicationMixin(DialogV2) {
       resizable: true,
       frame: true,
       minimizable: false,
-      closeOnSubmit: true,
     },
     buttons: [
       {
@@ -40,6 +37,10 @@ export class DescriptionEditor extends HandlebarsApplicationMixin(DialogV2) {
         callback: (event, button, dialog) => dialog.close(),
       }
     ],
+    form: {
+      handler: DescriptionEditor.onSubmitForm.bind(DescriptionEditor), // Bind the static method to the class itself
+      closeOnSubmit: true,
+    },
   };
 
   static PARTS = {
@@ -86,11 +87,13 @@ export class DescriptionEditor extends HandlebarsApplicationMixin(DialogV2) {
     }
   }
 
-  async _onSubmitForm(event, form, formData) {
+  // Changed to an instance method
+  async onSubmitForm(event, form, formData) {
     event.preventDefault();
     await this._updateObject(event, formData);
   }
 
+  // Changed to an instance method
   async _updateObject(event, formData) {
     const contentElement = this.element.querySelector('div[name="description"]');
     if (!contentElement) {
@@ -134,15 +137,5 @@ export class DescriptionEditor extends HandlebarsApplicationMixin(DialogV2) {
     }
     await this._updateObject();
     return super.submit(options);
-  }
-
-  async render(force = false, options = {}) {
-    try {
-      return await super.render(force, options);
-    } catch (error) {
-      console.error('DescriptionEditor: Error rendering editor:', error);
-      ui.notifications.error("Failed to open description editor");
-      throw error;
-    }
   }
 }

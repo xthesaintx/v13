@@ -28,14 +28,14 @@ export class TemplateComponents {
     return ASSET_MAP.default.image;
   }
 
-  // v13: Updated to use data-action attributes for edit buttons
-  static richTextSection(label, icon, enrichedValue, editlocation) {
+  // v13: Updated to render a ProseMirror element directly in the sheet
+  static richTextSection(label, icon, enrichedValue, fieldName, documentUuid) {
     const systemClass = game.system.id === 'dnd5e' ? ' dnd5e' : '';
     const journalClass = game.system.id === 'dnd5e' ? 'journal-entry-content' : ''; 
 
     if (!game.user.isGM) {
       return `
-        <div class="form-section${systemClass}" name="proseedited">
+        <div class="form-section${systemClass}">
           <label class="form-label">
             <i class="${icon}"></i>
             ${label}
@@ -47,18 +47,23 @@ export class TemplateComponents {
       `;
     }
 
+    // New element is prose-mirror
     return `
-      <div class="form-section${systemClass}" name="proseedited">
+      <div class="form-section${systemClass}">
         <label class="form-label">
           <i class="${icon}"></i>
           ${label}
-          <a data-action="editDescription" data-field="${editlocation}" title="Edit">
+          <a data-action="toggleProseMirror" data-field="${fieldName}" title="Edit">
             <i class="fas fa-edit" style="margin-left: 8px; cursor: pointer;"></i>
           </a>
         </label>
-        <div class="${journalClass}">
+        <prose-mirror name="flags.campaign-codex.data.${fieldName}" 
+                      document-uuid="${documentUuid}" 
+                      toggled 
+                      collaborate
+                      class="${journalClass}">
           ${enrichedValue}
-        </div>
+        </prose-mirror>
       </div>
     `;
   }

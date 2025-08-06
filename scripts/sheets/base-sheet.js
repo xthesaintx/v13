@@ -1,4 +1,4 @@
-import { DescriptionEditor } from './editors/description-editor.js';
+// import { DescriptionEditor } from './editors/description-editor.js';
 import { CampaignCodexLinkers } from './linkers.js';
 import { TemplateComponents } from './template-components.js';
 
@@ -28,8 +28,7 @@ export class CampaignCodexBaseSheet extends HandlebarsApplicationMixin(DocumentS
     // Define actions declaratively instead of using activateListeners
     actions: {
       tabSwitch: CampaignCodexBaseSheet.#onTabSwitch,
-      editDescription: CampaignCodexBaseSheet.#onEditDescription,
-      editNotes: CampaignCodexBaseSheet.#onEditNotes,
+      toggleProseMirror: CampaignCodexBaseSheet.#onToggleProseMirror, // NEW action
       dropNPCsToMap: CampaignCodexBaseSheet.#onDropNPCsToMapClick,
       openDocument: CampaignCodexBaseSheet.#onOpenDocument,
       removeFromList: CampaignCodexBaseSheet.#onRemoveFromList,
@@ -211,27 +210,13 @@ export class CampaignCodexBaseSheet extends HandlebarsApplicationMixin(DocumentS
   }
 
   // Action handlers (all must be static private methods in v13)
-  static async #onEditDescription(event, target) {
+  static async #onToggleProseMirror(event, target) {
     event.preventDefault();
-    const field = target.dataset.field || 'description';
-    
-    const editor = new DescriptionEditor({
-      document: this.document,
-      field: field
-    });
-    
-    return editor.render(true);
-  }
-
-  static async #onEditNotes(event, target) {
-    event.preventDefault();
-    
-    const editor = new DescriptionEditor({
-      document: this.document,
-      field: 'notes'
-    });
-    
-    return editor.render(true);
+    const field = target.dataset.field;
+    const editorElement = this.element.querySelector(`prose-mirror[name="flags.campaign-codex.data.${field}"]`);
+    if (editorElement) {
+      editorElement.open = !editorElement.open;
+    }
   }
 
   static async #onDropNPCsToMapClick(event, target) {
@@ -277,13 +262,14 @@ export class CampaignCodexBaseSheet extends HandlebarsApplicationMixin(DocumentS
     await this._onSubmit(event);
   }
 
-static async #onTabSwitch(event, target) {
-  event.preventDefault();
-  const tabName = target.dataset.tab;
-  if (tabName) {
-    this._showTab(tabName); 
+  static async #onTabSwitch(event, target) {
+    event.preventDefault();
+    const tabName = target.dataset.tab;
+    
+    if (tabName) {
+      this._switchTab(tabName);
+    }
   }
-}
 
   static async #onNameEdit(event, target) {
     event.preventDefault();
@@ -335,7 +321,7 @@ static async #onTabSwitch(event, target) {
   static generateNotesTab(context) {
     return `
       ${TemplateComponents.contentHeader('fas fa-sticky-note', 'GM Notes')}
-      ${TemplateComponents.richTextSection('Notes', 'fas fa-sticky-note', context.sheetData.enrichedNotes, 'notes')}
+      ${TemplateComponents.richTextSection('Notes', 'fas fa-sticky-note', context.sheetData.enrichedNotes, 'notes', context.document.uuid)}
     `;
   }
 }
