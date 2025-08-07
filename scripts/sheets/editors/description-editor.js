@@ -22,9 +22,10 @@ export class DescriptionEditor extends FormApplication {
  
 
   activateListeners(html) {
+  const nativeHtml = html instanceof jQuery ? html[0] : html;
   super.activateListeners(html);
 
-  const targetElement = html.find('div[name="description"]')[0];
+  const targetElement = nativeHtml.querySelector('div[name="description"]');
 
   const dataPath = `flags.campaign-codex.data.${this.fieldName}`;
   const content = foundry.utils.getProperty(this.object, dataPath) || "";
@@ -53,7 +54,7 @@ export class DescriptionEditor extends FormApplication {
 
   async _updateObject(event, formData) {
     const fnamed = this.fieldName;
-    const newContent = this.element.find('div[name="description"]').html();
+    const newContent = this.element[0].querySelector('div[name="description"]').innerHTML;
     const dataPath = 'flags.campaign-codex.data.'+fnamed;
     await this.document.update({
       [dataPath]: newContent

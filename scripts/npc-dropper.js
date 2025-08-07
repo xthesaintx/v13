@@ -101,11 +101,12 @@ export class NPCDropper {
             label: "Start Placing",
             callback: async (html) => {
               const selectedNPCIds = [];
-              html.find('input[name="selected-npcs"]:checked').each(function() {
-                selectedNPCIds.push(this.value);
+              html.querySelectorAll('input[name="selected-npcs"]:checked').forEach(input => {
+                selectedNPCIds.push(input.value);
               });
               
-              const startHidden = html.find('input[name="start-hidden"]').prop('checked');
+              const startHiddenInput = html.querySelector('input[name="start-hidden"]');
+              const startHidden = startHiddenInput ? startHiddenInput.checked : false;
               
               if (selectedNPCIds.length > 0) {
                 const selectedNPCs = npcs.filter(npc => 

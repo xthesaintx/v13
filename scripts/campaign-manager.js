@@ -437,7 +437,7 @@ async addItemToShop(shopDoc, itemDoc, quantity = 1) {
 
 
 async handleRelationshipUpdates(document, changes, type) {
-  if (!foundry.utils.hasProperty(changes, "flags.campaign-codx")) return;
+  if (!foundry.utils.hasProperty(changes, "flags.campaign-codex")) return;
 
   switch (type) {
     case "location":
@@ -655,13 +655,6 @@ if (changes.linkedShops) {
     });
 
   await Promise.all([...removalPromises, ...additionPromises]);
-
-  for (const app of Object.values(ui.windows)) {
-    if (app.document?.uuid === npcDoc.uuid) {
-      app.render(false);
-      break;
-    }
-  }
 }
 
     if (changes.associates) {

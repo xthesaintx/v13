@@ -1,4 +1,3 @@
-
 import { CampaignCodexBaseSheet } from './base-sheet.js';
 import { TemplateComponents } from './template-components.js';
 import { GroupLinkers } from './group-linkers.js';
@@ -74,40 +73,41 @@ async getData() {
 }
 
   activateListeners(html) {
+    const nativeHtml = html instanceof jQuery ? html[0] : html;
     super.activateListeners(html);
 
 
     
-    html.find('.expand-toggle').click(this._onToggleTreeNode.bind(this));
-    html.find('.btn-expand-all').click(this._onExpandAll.bind(this));
-    html.find('.btn-collapse-all').click(this._onCollapseAll.bind(this));
-    html.find('.tree-label.clickable').click(this._onSelectSheet.bind(this));
-    html.find('.toggle-tree-items').click(this._onToggleTreeItems.bind(this));
+    nativeHtml.querySelectorAll('.expand-toggle').forEach(element => element.addEventListener('click', this._onToggleTreeNode.bind(this)));
+    nativeHtml.querySelector('.btn-expand-all')?.addEventListener('click', this._onExpandAll.bind(this));
+    nativeHtml.querySelector('.btn-collapse-all')?.addEventListener('click', this._onCollapseAll.bind(this));
+    nativeHtml.querySelectorAll('.tree-label.clickable').forEach(element => element.addEventListener('click', this._onSelectSheet.bind(this)));
+    nativeHtml.querySelector('.toggle-tree-items')?.addEventListener('click', this._onToggleTreeItems.bind(this));
 
 
-    html.find('.selected-sheet-tab').click(this._onSelectedSheetTabChange.bind(this));
-    html.find('.btn-close-selected').click(this._onCloseSelectedSheet.bind(this));
+    nativeHtml.querySelectorAll('.selected-sheet-tab').forEach(element => element.addEventListener('click', this._onSelectedSheetTabChange.bind(this)));
+    nativeHtml.querySelector('.btn-close-selected')?.addEventListener('click', this._onCloseSelectedSheet.bind(this));
 
-    html.find('.btn-open-sheet').click(e => this._onOpenDocument(e, 'sheet'));
-    html.find('.btn-open-actor').click(e => this._onOpenDocument(e, 'actor'));
-    html.find('.group-location-card').click(e => this._onOpenDocument(e, 'sheet'));
-    html.find('.card-image-clickable').click(e => {
+    nativeHtml.querySelectorAll('.btn-open-sheet').forEach(element => element.addEventListener('click', e => this._onOpenDocument(e, 'sheet')));
+    nativeHtml.querySelectorAll('.btn-open-actor').forEach(element => element.addEventListener('click', e => this._onOpenDocument(e, 'actor')));
+    nativeHtml.querySelectorAll('.group-location-card').forEach(element => element.addEventListener('click', e => this._onOpenDocument(e, 'sheet')));
+    nativeHtml.querySelectorAll('.card-image-clickable').forEach(element => element.addEventListener('click', e => {
         e.stopPropagation();
         this._onOpenDocument(e, 'sheet');
-    });
+    }));
 
     
-    html.find('.btn-remove-member').click(this._onRemoveMember.bind(this));
-    html.find('.btn-focus-item').click(this._onFocusItem.bind(this));
+    nativeHtml.querySelectorAll('.btn-remove-member').forEach(element => element.addEventListener('click', this._onRemoveMember.bind(this)));
+    nativeHtml.querySelectorAll('.btn-focus-item').forEach(element => element.addEventListener('click', this._onFocusItem.bind(this)));
 
     
-    html.find('.filter-btn').click(this._onFilterChange.bind(this));
+    nativeHtml.querySelectorAll('.filter-btn').forEach(element => element.addEventListener('click', this._onFilterChange.bind(this)));
 
     
-    html.find('.group-tab').click(this._onTabChange.bind(this));
+    nativeHtml.querySelectorAll('.group-tab').forEach(element => element.addEventListener('click', this._onTabChange.bind(this)));
 
     
-    html.find('.btn-send-to-player').click(this._onSendToPlayer.bind(this));
+    nativeHtml.querySelectorAll('.btn-send-to-player').forEach(element => element.addEventListener('click', this._onSendToPlayer.bind(this)));
   }
 
 
@@ -557,7 +557,7 @@ _onSelectSheet(event) {
               <img src="${TemplateComponents.getAsset('image', 'item', item.img)}" alt="${item.name}" class="item-icon">
               <div class="item-info">
                 <h5>${item.name}</h5>
-                <span class="item-details">Qty: ${item.quantity} | Price: ${item.finalPrice}${item.currency}</span>
+                <span class="item-price">${item.quantity}x ${item.finalPrice}${item.currency}</span>
               </div>
               <div class="item-actions">
                 <button type="button" class="btn-send-to-player" data-sheet-uuid="${this._selectedSheet.uuid}" data-item-uuid="${item.itemUuid}" title="Send to Player">
@@ -1104,7 +1104,8 @@ _onSelectSheet(event) {
   }
 
   _onExpandAll(event) {
-    this.element.find('.tree-node').each((i, el) => {
+    const nativeElement = this.element instanceof jQuery ? this.element[0] : this.element;
+    nativeElement.querySelectorAll('.tree-node').forEach(el => {
         const uuid = el.dataset.sheetUuid;
         if (uuid && el.querySelector('.tree-children')) {
             this._expandedNodes.add(uuid);
@@ -1123,18 +1124,19 @@ _onSelectSheet(event) {
   }
 
   _onFilterChange(event) {
+    const nativeElement = this.element instanceof jQuery ? this.element[0] : this.element;
     const filter = event.currentTarget.dataset.filter;
-    const cards = this.element.find('.group-npc-card');
+    const cards = nativeElement.querySelectorAll('.group-npc-card');
     
-    this.element.find('.filter-btn').removeClass('active');
+    nativeElement.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
     
-    cards.each(function() {
-      const cardFilter = this.dataset.filter;
+    cards.forEach(card => {
+      const cardFilter = card.dataset.filter;
       if (filter === 'all' || cardFilter.includes(filter)) {
-        this.style.display = 'flex';
+        card.style.display = 'flex';
       } else {
-        this.style.display = 'none';
+        card.style.display = 'none';
       }
     });
   }

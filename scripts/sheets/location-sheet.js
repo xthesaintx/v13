@@ -234,7 +234,7 @@ _generateNPCsTab(data) {
 
 
   _activateSheetSpecificListeners(html) {
-    html.find('.remove-npc').click(async (e) => {
+    html.querySelector('.remove-npc')?.addEventListener('click', async (e) => {
       const npcUuid = e.currentTarget.dataset.npcUuid;
       const npcCard = e.currentTarget.closest('.entity-card');
       const isShopNPC = npcCard.querySelector('.shop-tags');
@@ -247,26 +247,26 @@ _generateNPCsTab(data) {
       await this._onRemoveFromList(e, 'linkedNPCs');
     });
     
-    html.find('.remove-location').click(this._onRemoveFromRegion.bind(this));
-    html.find('.remove-shop').click(async (e) => await this._onRemoveFromList(e, 'linkedShops'));
+    html.querySelector('.remove-location')?.addEventListener('click', this._onRemoveFromRegion.bind(this));
+    html.querySelectorAll('.remove-shop')?.forEach(element => element.addEventListener('click', async (e) => await this._onRemoveFromList(e, 'linkedShops')));
 
     
-    html.find('.open-npc').click(async (e) => await this._onOpenDocument(e, 'npc'));
-    html.find('.open-shop').click(async (e) => await this._onOpenDocument(e, 'shop'));
-    html.find('.open-actor').click(async (e) => await this._onOpenDocument(e, 'actor'));
-    html.find('.open-region').click(async (e) => await this._onOpenDocument(e, 'region')); 
-  html.find('.open-scene').click(this._onOpenScene.bind(this));
-  html.find('.remove-scene').click(this._onRemoveScene.bind(this));
+    html.querySelectorAll('.open-npc')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
+    html.querySelectorAll('.open-shop')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'shop')));
+    html.querySelectorAll('.open-actor')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'actor')));
+    html.querySelectorAll('.open-region')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'region'))); 
+  html.querySelector('.open-scene')?.addEventListener('click', this._onOpenScene.bind(this));
+  html.querySelector('.remove-scene')?.addEventListener('click', this._onRemoveScene.bind(this));
 
     
-    html.find('.npc-link').click(async (e) => await this._onOpenDocument(e, 'npc'));
-    html.find('.shop-link').click(async (e) => await this._onOpenDocument(e, 'shop'));
+    html.querySelectorAll('.npc-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
+    html.querySelectorAll('.shop-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'shop')));
     
     
-    html.find('.region-link').click(async (e) => await this._onOpenDocument(e, 'region'));
+    html.querySelectorAll('.region-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'region')));
 
     
-    html.find('.refresh-npcs').click(this._onRefreshNPCs.bind(this));
+    html.querySelector('.refresh-npcs')?.addEventListener('click', this._onRefreshNPCs.bind(this));
   }
 
   async _onRefreshNPCs(event) {

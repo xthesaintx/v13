@@ -72,12 +72,12 @@ Hooks.once('ready', async function() {
     game.campaignCodexTokenPlacement = CampaignCodexTokenPlacement;
     window.CampaignCodexTokenPlacement = CampaignCodexTokenPlacement;
 
-    // These are now handled by the helper.js for the UI, but might be needed globally for other parts
-    // window.SimpleCampaignCodexExporter = SimpleCampaignCodexExporter;
-    // window.SimpleCampaignCodexImporter = SimpleCampaignCodexImporter;
+    
+    
+    
 
     if (game.settings.get("campaign-codex", "useOrganizedFolders")) {
-        await ensureCampaignCodexFolders(); // Call the imported function
+        await ensureCampaignCodexFolders(); 
     }
 
     if (game.user.isGM) {
@@ -160,14 +160,14 @@ Hooks.on('getJournalDirectoryEntryContext', (html, options) => {
             const journalUuid = li.data("uuid") || `JournalEntry.${li.data("documentId")}`;
             const journal = await fromUuid(journalUuid);
             if (journal) {
-                await showAddToGroupDialog(journal); // Call the imported function
+                await showAddToGroupDialog(journal); 
             }
         }
     });
 });
 
 Hooks.on('renderJournalDirectory', (app, html, data) => {
-    // Call the single function that handles all UI additions for the directory
+    
     addJournalDirectoryUI(html); 
 });
 
@@ -180,7 +180,7 @@ Hooks.on('createJournalEntry', async (document, options, userId) => {
     const journalType = document.getFlag("campaign-codex", "type");
     if (!journalType) return;
 
-    const folder = getCampaignCodexFolder(journalType); // Call the imported function
+    const folder = getCampaignCodexFolder(journalType); 
     if (folder) {
         await document.update({ folder: folder.id });
     }
@@ -311,14 +311,23 @@ Hooks.on('updateActor', async (actor, changes, options, userId) => {
         }
     }
 });
+// v13
+// Hooks.on('renderChatMessageHTML', (app, html, data) => {
+    // const handlers = html.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
+    // handlers.forEach(element => {
+    //     element.addEventListener('click', handleCampaignCodexClick);
+    // });
 
+// v12
 
-// Register the hook to listen for clicks on chat messages
 Hooks.on('renderChatMessage', (app, html, data) => {
-    html.find(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`).click(handleCampaignCodexClick);
+    const nativeHtml = html instanceof jQuery ? html[0] : html;
+    const handlers = nativeHtml.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
+    handlers.forEach(element => {
+        element.addEventListener('click', handleCampaignCodexClick);
+    });
 });
 
 
 
-// This is now exported from helper.js
-// window.getCampaignCodexFolder = getCampaignCodexFolder; 
+

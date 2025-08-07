@@ -349,9 +349,11 @@ static async _getExportConfig() {
           icon: '<i class="fas fa-download"></i>',
           label: "Export",
           callback: (html) => {
-            const baseName = html.find('[name="baseName"]').val()?.trim();
-            const performCleanup = html.find('[name="performCleanup"]').is(':checked');
-            const exportScenes = html.find('[name="exportScenes"]').is(':checked');
+            const nativeHtml = html instanceof jQuery ? html[0] : html;
+            const form = nativeHtml.querySelector('form');
+            const baseName = form.elements.namedItem('baseName').value.trim();
+            const performCleanup = form.elements.namedItem('performCleanup').checked;
+            const exportScenes = form.elements.namedItem('exportScenes').checked;
             resolve({ 
               baseName: baseName || "My Campaign",
               performCleanup: performCleanup,

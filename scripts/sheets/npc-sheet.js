@@ -217,7 +217,7 @@ export class NPCSheet extends CampaignCodexBaseSheet {
 
 
   _activateSheetSpecificListeners(html) {
-    html.find('.remove-location').click(async (e) => {
+    html.querySelectorAll('.remove-location')?.forEach(element => element.addEventListener('click', async (e) => {
       e.stopPropagation();
       
       if (e.currentTarget.style.opacity === '0.3' || e.currentTarget.style.cursor === 'not-allowed') {
@@ -234,27 +234,27 @@ export class NPCSheet extends CampaignCodexBaseSheet {
       }
       
       await this._onRemoveFromList(e, 'linkedLocations');
-    });
+    }));
 
 
-    html.find('.remove-actor').click(this._onRemoveActor.bind(this));
-    html.find('.remove-shop').click(async (e) => await this._onRemoveFromList(e, 'linkedShops'));
-    html.find('.remove-associate').click(async (e) => await this._onRemoveFromList(e, 'associates'));
-
-    
-    html.find('.open-actor').click(async (e) => await this._onOpenDocument(e, 'actor'));
-    html.find('.open-location').click(async (e) => await this._onOpenDocument(e, 'location'));
-    html.find('.open-shop').click(async (e) => await this._onOpenDocument(e, 'shop'));
-    html.find('.open-npc').click(async (e) => await this._onOpenDocument(e, 'npc'));
-    html.find('.open-associate').click(async (e) => await this._onOpenDocument(e, 'associate'));
+    html.querySelector('.remove-actor')?.addEventListener('click', this._onRemoveActor.bind(this));
+    html.querySelectorAll('.remove-shop')?.forEach(element => element.addEventListener('click', async (e) => await this._onRemoveFromList(e, 'linkedShops')));
+    html.querySelectorAll('.remove-associate')?.forEach(element => element.addEventListener('click', async (e) => await this._onRemoveFromList(e, 'associates')));
 
     
-    html.find('.refresh-locations').click(this._onRefreshLocations.bind(this));
+    html.querySelectorAll('.open-actor')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'actor')));
+    html.querySelectorAll('.open-location')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
+    html.querySelectorAll('.open-shop')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'shop')));
+    html.querySelectorAll('.open-npc')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
+    html.querySelectorAll('.open-associate')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'associate')));
 
     
-    html.find('.location-link').click(async (e) => await this._onOpenDocument(e, 'location'));
-    html.find('.shop-link').click(async (e) => await this._onOpenDocument(e, 'shop'));
-    html.find('.npc-link').click(async (e) => await this._onOpenDocument(e, 'npc'));
+    html.querySelector('.refresh-locations')?.addEventListener('click', this._onRefreshLocations.bind(this));
+
+    
+    html.querySelectorAll('.location-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
+    html.querySelectorAll('.shop-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'shop')));
+    html.querySelectorAll('.npc-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
   }
 
 

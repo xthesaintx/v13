@@ -229,23 +229,23 @@ export class RegionSheet extends CampaignCodexBaseSheet {
 
   _activateSheetSpecificListeners(html) {
 
-    html.find('.remove-location').click(this._onRemoveFromRegion.bind(this)); 
+    html.querySelectorAll('.remove-location')?.forEach(element => element.addEventListener('click', this._onRemoveFromRegion.bind(this))); 
 
     
-    html.find('.open-location').click(async (e) => await this._onOpenDocument(e, 'location'));
-    html.find('.open-npc').click(async (e) => await this._onOpenDocument(e, 'npc'));
-    html.find('.open-shop').click(async (e) => await this._onOpenDocument(e, 'shop'));
-    html.find('.open-actor').click(async (e) => await this._onOpenDocument(e, 'actor'));
+    html.querySelectorAll('.open-location')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
+    html.querySelectorAll('.open-npc')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
+    html.querySelectorAll('.open-shop')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'shop')));
+    html.querySelectorAll('.open-actor')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'actor')));
 
     
-    html.find('.refresh-npcs').click(this._onRefreshData.bind(this));
-    html.find('.refresh-shops').click(this._onRefreshData.bind(this));
+    html.querySelector('.refresh-npcs')?.addEventListener('click', this._onRefreshData.bind(this));
+    html.querySelector('.refresh-shops')?.addEventListener('click', this._onRefreshData.bind(this));
 
     
-    html.find('.location-link').click(async (e) => await this._onOpenDocument(e, 'location'));
+    html.querySelectorAll('.location-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
 
-html.find('.open-scene').click(this._onOpenScene.bind(this));
-html.find('.remove-scene').click(this._onRemoveScene.bind(this));
+html.querySelector('.open-scene')?.addEventListener('click', this._onOpenScene.bind(this));
+html.querySelector('.remove-scene')?.addEventListener('click', this._onRemoveScene.bind(this));
 
 
 

@@ -1,4 +1,3 @@
-
 export class SimpleCampaignCodexImporter {
   static CONSTANTS = {
     FLAG_SCOPE: "campaign-codex",
@@ -114,9 +113,11 @@ export class SimpleCampaignCodexImporter {
             icon: '<i class="fas fa-upload"></i>',
             label: "Import",
             callback: (html) => {
-              const journalCompendium = html.find('[name="journalCompendium"]').val();
-              const replaceExisting = html.find('[name="replaceExisting"]').is(':checked');
-              const skipExisting = html.find('[name="skipExisting"]').is(':checked');
+              const nativeHtml = html instanceof jQuery ? html[0] : html;
+              const form = nativeHtml.querySelector('form');
+              const journalCompendium = form.elements.namedItem('journalCompendium').value;
+              const replaceExisting = form.elements.namedItem('replaceExisting').checked;
+              const skipExisting = form.elements.namedItem('skipExisting').checked;
               const selectedComp = ccCompendiums.find(c => c.name === journalCompendium);
               resolve({ 
                 journalCompendium: selectedComp.pack,

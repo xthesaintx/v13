@@ -38,93 +38,119 @@ async getData() {
 }
 
   activateListeners(html) {
+    const nativeHtml = html instanceof jQuery ? html[0] : html;
     super.activateListeners(html);
 
     
-    this._activateTabs(html);
-    this._setupDropZones(html);
-    this._setupNameEditing(html);
-    this._setupImageChange(html);
-    this._setupSaveButton(html);
+    this._activateTabs(nativeHtml);
+    this._setupDropZones(nativeHtml);
+    this._setupNameEditing(nativeHtml);
+    this._setupImageChange(nativeHtml);
+    this._setupSaveButton(nativeHtml);
     
     
-    this._activateSheetSpecificListeners(html);
-    html.find('.cc-edit-description').click(event => this._onEditDescription(event, 'description'));
-    html.find('.cc-edit-notes').click(event => this._onEditDescription(event, 'notes'));
-    html.find('.npcs-to-map-button').click(this._onDropNPCsToMapClick.bind(this));
+    this._activateSheetSpecificListeners(nativeHtml);
+    nativeHtml.querySelector('.cc-edit-description')?.addEventListener('click', event => this._onEditDescription(event, 'description'));
+    nativeHtml.querySelector('.cc-edit-notes')?.addEventListener('click', event => this._onEditDescription(event, 'notes'));
+    nativeHtml.querySelector('.npcs-to-map-button')?.addEventListener('click', this._onDropNPCsToMapClick.bind(this));
 
   }
 
 
 
   _activateTabs(html) {
-    html.find('.sidebar-tabs .tab-item').click(event => {
-      event.preventDefault();
-      const tab = event.currentTarget.dataset.tab;
-      this._currentTab = tab;
-      this._showTab(tab, html);
+    html.querySelectorAll('.sidebar-tabs .tab-item').forEach(tab => {
+      tab.addEventListener('click', event => {
+        event.preventDefault();
+        const tabName = event.currentTarget.dataset.tab;
+        this._currentTab = tabName;
+        this._showTab(tabName, html);
+      });
     });
-
     this._showTab(this._currentTab, html);
   }
 
   _showTab(tabName, html) {
-    const $html = html instanceof jQuery ? html : $(html);
-    
-    $html.find('.sidebar-tabs .tab-item').removeClass('active');
-    $html.find('.tab-panel').removeClass('active');
+    html.querySelectorAll('.sidebar-tabs .tab-item').forEach(tab => tab.classList.remove('active'));
+    html.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
-    $html.find(`.sidebar-tabs .tab-item[data-tab="${tabName}"]`).addClass('active');
-    $html.find(`.tab-panel[data-tab="${tabName}"]`).addClass('active');
+    html.querySelector(`.sidebar-tabs .tab-item[data-tab="${tabName}"]`)?.classList.add('active');
+    html.querySelector(`.tab-panel[data-tab="${tabName}"]`)?.classList.add('active');
   }
 
   _setupDropZones(html) {
-    html[0].addEventListener('drop', this._onDrop.bind(this));
-    html[0].addEventListener('dragover', this._onDragOver.bind(this));
+    html.addEventListener('drop', this._onDrop.bind(this));
+    html.addEventListener('dragover', this._onDragOver.bind(this));
   }
 
   _setupNameEditing(html) {
-    html.find('.sheet-title').click(this._onNameEdit.bind(this));
+    html.querySelector('.sheet-title')?.addEventListener('click', this._onNameEdit.bind(this));
     
-    html.on('blur', '.name-input', this._onNameSave.bind(this));
-    html.on('keypress', '.name-input', this._onNameKeypress.bind(this));
+    html.addEventListener('blur', this._onNameSave.bind(this), true);
+    html.addEventListener('keypress', this._onNameKeypress.bind(this));
   }
 
   _setupImageChange(html) {
-    html.find('.image-change-btn').off('click').on('click', this._onImageClick.bind(this));
+    const imageButton = html.querySelector('.image-change-btn');
+    if (imageButton) {
+      imageButton.removeEventListener('click', this._onImageClick.bind(this));
+      imageButton.addEventListener('click', this._onImageClick.bind(this));
+    }
   }
 
   _setupSaveButton(html) {
-    html.find('.save-data').click(this._onSaveData.bind(this));
+    html.querySelector('.save-data')?.addEventListener('click', this._onSaveData.bind(this));
   }
 
   
   async _onNameEdit(event) {
-    const nameElement = $(event.currentTarget);
-    const currentName = nameElement.text();
+    const nameElement = event.currentTarget;
+    const currentName = nameElement.textContent;
     
-    const input = $(`<input type="text" class="name-input" value="${currentName}" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 8px; border-radius: 4px; font-family: 'Modesto Condensed', serif; font-size: 28px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; width: 100%;">`);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'name-input';
+    input.value = currentName;
+    input.style.cssText = `
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: 'Modesto Condensed', serif;
+      font-size: 28px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      width: 100%;
+    `;
     
     nameElement.replaceWith(input);
-    input.focus().select();
+    input.focus();
+    input.select();
   }
 
   async _onNameSave(event) {
-    const input = $(event.currentTarget);
-    const newName = input.val().trim();
+    if (!event.target.classList.contains('name-input')) return;
+    
+    const input = event.target;
+    const newName = input.value.trim();
     
     if (newName && newName !== this.document.name) {
       await this.document.update({ name: newName });
     }
     
-    const nameElement = $(`<h1 class="sheet-title">${this.document.name}</h1>`);
+    const nameElement = document.createElement('h1');
+    nameElement.className = 'sheet-title';
+    nameElement.textContent = this.document.name;
     input.replaceWith(nameElement);
-    nameElement.click(this._onNameEdit.bind(this));
+    nameElement.addEventListener('click', this._onNameEdit.bind(this));
   }
 
   async _onNameKeypress(event) {
-    if (event.which === 13) {
-      event.currentTarget.blur();
+    if (event.key === "Enter" && event.target.classList.contains('name-input')) {
+      event.preventDefault();
+      event.target.blur();
     }
   }
   
@@ -209,7 +235,8 @@ async _onDrop(event) {
 async _onSaveData(event) {
   event.preventDefault();
   
-  const form = this.element.find('form')[0];
+  const nativeElement = this.element instanceof jQuery ? this.element[0] : this.element;
+  const form = nativeElement.querySelector('form');
   const formData = new FormDataExtended(form);
   const data = formData.object;
   const currentData = this.document.getFlag("campaign-codex", "data") || {};
@@ -219,11 +246,11 @@ async _onSaveData(event) {
   };
   
   const proseEditedFields = new Set();
-  this.element.find('[name="proseedited"]').each(function() {
+  nativeElement.querySelectorAll('[name="proseedited"]').forEach(function(element) {
     
-    const editBtn = $(this).find('[class^="cc-edit-"]');
-    if (editBtn.length) {
-      const className = editBtn.attr('class');
+    const editBtn = element.querySelector('[class^="cc-edit-"]');
+    if (editBtn) {
+      const className = editBtn.className;
       const fieldMatch = className.match(/cc-edit-(\w+)/);
       if (fieldMatch) {
         proseEditedFields.add(fieldMatch[1]);
@@ -242,22 +269,23 @@ async _onSaveData(event) {
     await this.document.setFlag("campaign-codex", "data", updatedData);
     ui.notifications.info(`${this.constructor.name.replace('Sheet', '')} saved successfully!`);
     
-    const saveBtn = $(event.currentTarget);
-    saveBtn.addClass('success');
-    setTimeout(() => saveBtn.removeClass('success'), 1500);
+    const saveBtn = event.currentTarget;
+    saveBtn.classList.add('success');
+    setTimeout(() => saveBtn.classList.remove('success'), 1500);
     
   } catch (error) {
     console.error("Campaign Codex | Error saving data:", error);
     ui.notifications.error("Failed to save data!");
     
-    const saveBtn = $(event.currentTarget);
-    saveBtn.addClass('error');
-    setTimeout(() => saveBtn.removeClass('error'), 1500);
+    const saveBtn = event.currentTarget;
+    saveBtn.classList.add('error');
+    setTimeout(() => saveBtn.classList.remove('error'), 1500);
   }
 }
 
 async _saveFormData() {
-  const form = this.element?.find('form')[0];
+  const nativeElement = this.element instanceof jQuery ? this.element[0] : this.element;
+  const form = nativeElement?.querySelector('form');
   if (form) {
     try {
       const formData = new FormDataExtended(form);
@@ -269,11 +297,11 @@ async _saveFormData() {
       };
       
       const proseEditedFields = new Set();
-      this.element.find('[name="proseedited"]').each(function() {
+      nativeElement.querySelectorAll('[name="proseedited"]').forEach(function(element) {
         
-        const editBtn = $(this).find('[class^="cc-edit-"]');
-        if (editBtn.length) {
-          const className = editBtn.attr('class');
+        const editBtn = element.querySelector('[class^="cc-edit-"]');
+        if (editBtn) {
+          const className = editBtn.className;
           const fieldMatch = className.match(/cc-edit-(\w+)/);
           if (fieldMatch) {
             proseEditedFields.add(fieldMatch[1]);

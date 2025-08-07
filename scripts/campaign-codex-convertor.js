@@ -1,4 +1,3 @@
-
 export class CampaignCodexJournalConverter {
 
   /**
@@ -254,7 +253,9 @@ export class CampaignCodexJournalConverter {
             icon: '<i class="fas fa-book"></i>',
             label: "Export",
             callback: async (html) => {
-              const formData = new FormDataExtended(html.find('form')[0]).object;
+              const nativeHtml = html instanceof jQuery ? html[0] : html;
+              const form = nativeHtml.querySelector('form');
+              const formData = new FormDataExtended(form).object;
               
               const options = {
                 namePrefix: "",

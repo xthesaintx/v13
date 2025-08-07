@@ -41,7 +41,6 @@ export class ShopSheet extends CampaignCodexBaseSheet {
 
 
     
-    data.linkedNPCs = await CampaignCodexLinkers.getLinkedNPCs(shopData.linkedNPCs || []);
     data.linkedNPCs = await CampaignCodexLinkers.getLinkedNPCs(this.document, shopData.linkedNPCs || []);
     data.linkedLocation = shopData.linkedLocation ? await CampaignCodexLinkers.getLinkedLocation(shopData.linkedLocation) : null;
     data.inventory = await CampaignCodexLinkers.getInventory(this.document, shopData.inventory || []);
@@ -239,43 +238,45 @@ _generateNPCsTab(data) {
 
   _activateSheetSpecificListeners(html) {
     
-    html.find('.markup-input').change(this._onMarkupChange.bind(this));
-    html.find('.shop-loot-toggle').change(this._onLootToggle.bind(this));
-    html.find('.hide-inventory-toggle').change(this._onHideInventoryToggle.bind(this));
+    html.querySelector('.markup-input')?.addEventListener('change', this._onMarkupChange.bind(this));
+    html.querySelector('.shop-loot-toggle')?.addEventListener('change', this._onLootToggle.bind(this));
+    html.querySelector('.hide-inventory-toggle')?.addEventListener('change', this._onHideInventoryToggle.bind(this));
 
     
-    html.find('.remove-npc').click(async (e) => await this._onRemoveFromList(e, 'linkedNPCs'));
-    html.find('.remove-item').click(this._onRemoveItem.bind(this));
-    html.find('.remove-location').click(this._onRemoveLocation.bind(this));
+    html.querySelectorAll('.remove-npc')?.forEach(element => element.addEventListener('click', async (e) => await this._onRemoveFromList(e, 'linkedNPCs')));
+    html.querySelectorAll('.remove-item')?.forEach(element => element.addEventListener('click', this._onRemoveItem.bind(this)));
+    html.querySelector('.remove-location')?.addEventListener('click', this._onRemoveLocation.bind(this));
 
     
-    html.find('.quantity-decrease').click(this._onQuantityDecrease.bind(this));
-    html.find('.quantity-increase').click(this._onQuantityIncrease.bind(this));
-    html.find('.quantity-input').change(this._onQuantityChange.bind(this));
+    html.querySelectorAll('.quantity-decrease')?.forEach(element => element.addEventListener('click', this._onQuantityDecrease.bind(this)));
+    html.querySelectorAll('.quantity-increase')?.forEach(element => element.addEventListener('click', this._onQuantityIncrease.bind(this)));
+    html.querySelectorAll('.quantity-input')?.forEach(element => element.addEventListener('change', this._onQuantityChange.bind(this)));
 
     
-    html.find('.price-input').change(this._onPriceChange.bind(this));
+    html.querySelectorAll('.price-input')?.forEach(element => element.addEventListener('change', this._onPriceChange.bind(this)));
 
     
-    html.find('.open-npc').click(async (e) => await this._onOpenDocument(e, 'npc'));
-    html.find('.open-location').click(async (e) => await this._onOpenDocument(e, 'location'));
-    html.find('.open-item').click(this._onOpenItem.bind(this)); 
-    html.find('.open-actor').click(async (e) => await this._onOpenDocument(e, 'actor'));
+    html.querySelectorAll('.open-npc')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
+    html.querySelectorAll('.open-location')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
+    html.querySelectorAll('.open-item')?.forEach(element => element.addEventListener('click', this._onOpenItem.bind(this))); 
+    html.querySelectorAll('.open-actor')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'actor')));
     
     
-    html.find('.send-to-player').click(this._onSendToPlayer.bind(this));
+    html.querySelectorAll('.send-to-player')?.forEach(element => element.addEventListener('click', this._onSendToPlayer.bind(this)));
     
     
-    html.find('.location-link').click(async (e) => await this._onOpenDocument(e, 'location'));
-    html.find('.npc-link').click(async (e) => await this._onOpenDocument(e, 'npc'));
+    html.querySelectorAll('.location-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'location')));
+    html.querySelectorAll('.npc-link')?.forEach(element => element.addEventListener('click', async (e) => await this._onOpenDocument(e, 'npc')));
 
     
-    html.find('.inventory-item').on('dragstart', this._onItemDragStart.bind(this));
-    html.find('.inventory-item').on('dragend', this._onItemDragEnd.bind(this));
+    html.querySelectorAll('.inventory-item')?.forEach(element => {
+      element.addEventListener('dragstart', this._onItemDragStart.bind(this));
+      element.addEventListener('dragend', this._onItemDragEnd.bind(this));
+    });
 
     
-    html.find('.open-scene').click(this._onOpenScene.bind(this));
-    html.find('.remove-scene').click(this._onRemoveScene.bind(this));
+    html.querySelector('.open-scene')?.addEventListener('click', this._onOpenScene.bind(this));
+    html.querySelector('.remove-scene')?.addEventListener('click', this._onRemoveScene.bind(this));
 
   }
 async _onOpenScene(event) {
@@ -449,7 +450,7 @@ const item = inventory.find(i => i.itemUuid === itemUuid);
     const itemUuid = event.currentTarget.dataset.itemUuid;
     const currentData = this.document.getFlag("campaign-codex", "data") || {};
     
-currentData.inventory = (currentData.inventory || []).filter(i => i.itemUuid !== itemUuid); 
+    currentData.inventory = (currentData.inventory || []).filter(i => i.itemUuid !== itemUuid); 
     await this.document.setFlag("campaign-codex", "data", currentData);
     
     this.render(false);

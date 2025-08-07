@@ -1,13 +1,13 @@
 import { MODULE_NAME } from "./settings.js";
 import { SimpleCampaignCodexExporter } from './campaign-codex-exporter.js';
 import { SimpleCampaignCodexImporter } from './campaign-codex-importer.js';
-import { GroupLinkers } from './sheets/group-linkers.js'; // Needed for showAddToGroupDialog
+import { GroupLinkers } from './sheets/group-linkers.js'; 
 
 /**
  * HTML string for the main campaign codex action buttons.
- * @type {JQuery<HTMLElement>}
+ * @type {string}
  */
-export const buttonGrouphead = $(`
+export const buttonGrouphead = `
     <div class="campaign-codex-buttons" style="margin: 8px 0; display: flex; gap: 4px; flex-wrap: wrap;">
         <button class="create-region-btn" type="button" title="Create New Region" style="flex: 1; min-width: 0; padding: 4px 8px; font-size: 11px; background: #20c997; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <i class="fas fa-globe"></i>
@@ -25,7 +25,7 @@ export const buttonGrouphead = $(`
             <i class="fas fa-layer-group"></i>
         </button>
     </div>
-`);
+`;
 
 /**
  * Handles clicks on elements with data-campaign-codex-handler attributes.
@@ -38,14 +38,14 @@ export function handleCampaignCodexClick(event) {
 
     if (!handler) return;
 
-    event.preventDefault(); // Prevent default link behavior if it's an <a> tag
+    event.preventDefault(); 
 
     const parts = handler.split('|');
     const module = parts[0];
     const action = parts[1];
     const args = parts.slice(2);
 
-    // Ensure it's for your module
+    
     if (module !== MODULE_NAME) {
         console.warn(`Campaign Codex | Click handler received for unknown module: ${module}`);
         return;
@@ -72,10 +72,10 @@ export function handleCampaignCodexClick(event) {
 /**
  * Generates the HTML for the export/import buttons.
  * @param {boolean} hasCampaignCodex - Whether there is any Campaign Codex content to export.
- * @returns {JQuery<HTMLElement>} The jQuery object containing the button HTML.
+ * @returns {string} The HTML string containing the buttons.
  */
 export function getExportImportButtonsHtml(hasCampaignCodex) {
-    return $(`
+    return `
         <div class="campaign-codex-export-buttons" style="margin: 8px;display: flex;gap: 4px;flex-direction: column;">
             ${hasCampaignCodex ? `
                 <button class="cc-export-btn" type="button" title="Export all Campaign Codex content to compendium" style="flex: 1; padding: 4px 8px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; height: auto">
@@ -86,7 +86,7 @@ export function getExportImportButtonsHtml(hasCampaignCodex) {
                 <i class="fas fa-upload"></i> Import Campaign Codex
             </button>
         </div>
-    `);
+    `;
 }
 
 /**
@@ -111,7 +111,8 @@ export async function promptForName(type) {
                     icon: '<i class="fas fa-check"></i>',
                     label: "Create",
                     callback: (html) => {
-                        const name = html.find('[name="name"]').val().trim();
+                        const nativeHtml = html instanceof jQuery ? html[0] : html;
+                        const name = nativeHtml.querySelector('[name="name"]').value.trim();
                         resolve(name || `New ${type}`);
                     }
                 },
@@ -123,9 +124,13 @@ export async function promptForName(type) {
             },
             default: "create",
             render: (html) => {
-                html.find('input[name="name"]').focus().keypress((e) => {
-                    if (e.which === 13) {
-                        html.closest('.dialog').find('.dialog-button.create button').click();
+                const nativeHtml = html instanceof jQuery ? html[0] : html;
+                const input = nativeHtml.querySelector('input[name="name"]');
+                input.focus();
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        nativeHtml.closest('.dialog').querySelector('.dialog-button.create').click();
                     }
                 });
             }
@@ -240,7 +245,8 @@ export async function showAddToGroupDialog(journal) {
                     icon: '<i class="fas fa-plus"></i>',
                     label: "Add to Group",
                     callback: async (html) => {
-                        const groupUuid = html.find('[name="groupUuid"]').val();
+                        const nativeHtml = html instanceof jQuery ? html[0] : html;
+                        const groupUuid = nativeHtml.querySelector('[name="groupUuid"]').value;
                         const groupJournal = await fromUuid(groupUuid);
 
                         if (groupJournal) {
@@ -279,63 +285,79 @@ export async function showAddToGroupDialog(journal) {
 
 /**
  * Adds Campaign Codex specific buttons to the Journal Directory UI.
- * @param {JQuery<HTMLElement>} html - The jQuery object representing the Journal Directory HTML.
+ * @param {HTMLElement} html - The raw HTML element representing the Journal Directory.
  */
 export function addJournalDirectoryUI(html) {
+    
+    const nativeHtml = html instanceof jQuery ? html[0] : html;
+    
     if (!game.user.isGM) return;
 
-    // Remove existing buttons to prevent duplicates on re-render
-    html.find('.campaign-codex-export-buttons').remove();
-
-    // Determine if export button should be shown
-    const hasCampaignCodex = game.journal.some(j => j.getFlag("campaign-codex", "type"));
-    const buttonContainer = getExportImportButtonsHtml(hasCampaignCodex);
-
-    // Append export/import buttons to the footer or after the list
-    const footer = html.find('.directory-footer');
-    if (footer.length > 0) {
-        footer.append(buttonContainer);
-    } else {
-        html.find('.directory-list').after(buttonContainer);
+    
+    const existingExportButtons = nativeHtml.querySelector('.campaign-codex-export-buttons');
+    if (existingExportButtons) {
+        existingExportButtons.remove();
     }
 
-    // Attach click listeners for export/import
-    html.find('.cc-export-btn').click(ev => {
-        ev.preventDefault();
-        SimpleCampaignCodexExporter.exportCampaignCodexToCompendium();
-    });
+    
+    const hasCampaignCodex = game.journal.some(j => j.getFlag("campaign-codex", "type"));
+    const buttonContainerHTML = getExportImportButtonsHtml(hasCampaignCodex);
 
-    html.find('.cc-import-btn').click(ev => {
-        ev.preventDefault();
-        SimpleCampaignCodexImporter.importCampaignCodexFromCompendium();
-    });
+    
+    const footer = nativeHtml.querySelector('.directory-footer');
+    if (footer) {
+        footer.insertAdjacentHTML('beforeend', buttonContainerHTML);
+    } else {
+        const directoryList = nativeHtml.querySelector('.directory-list');
+        if (directoryList) {
+            directoryList.insertAdjacentHTML('afterend', buttonContainerHTML);
+        }
+    }
+    
+    
+    const exportBtn = nativeHtml.querySelector('.cc-export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', ev => {
+            ev.preventDefault();
+            SimpleCampaignCodexExporter.exportCampaignCodexToCompendium();
+        });
+    }
+    const importBtn = nativeHtml.querySelector('.cc-import-btn');
+    if (importBtn) {
+        importBtn.addEventListener('click', ev => {
+            ev.preventDefault();
+            SimpleCampaignCodexImporter.importCampaignCodexFromCompendium();
+        });
+    }
 
-    // Append the main create buttons to the directory header
-    const directoryHeader = html.find('.directory-header');
-    directoryHeader.append(buttonGrouphead);
-
-    // Attach click listeners for the create buttons
-    html.find('.create-location-btn').click(async () => {
+    
+    const directoryHeader = nativeHtml.querySelector('.directory-header');
+    if (directoryHeader) {
+      directoryHeader.insertAdjacentHTML('beforeend', buttonGrouphead);
+    }
+    
+    
+    nativeHtml.querySelector('.create-location-btn')?.addEventListener('click', async () => {
         const name = await promptForName("Location");
         if (name) await game.campaignCodex.createLocationJournal(name);
     });
 
-    html.find('.create-shop-btn').click(async () => {
+    nativeHtml.querySelector('.create-shop-btn')?.addEventListener('click', async () => {
         const name = await promptForName("Entry");
         if (name) await game.campaignCodex.createShopJournal(name);
     });
 
-    html.find('.create-npc-btn').click(async () => {
+    nativeHtml.querySelector('.create-npc-btn')?.addEventListener('click', async () => {
         const name = await promptForName("NPC Journal");
         if (name) await game.campaignCodex.createNPCJournal(null, name);
     });
 
-    html.find('.create-region-btn').click(async () => {
+    nativeHtml.querySelector('.create-region-btn')?.addEventListener('click', async () => {
         const name = await promptForName("Region");
         if (name) await game.campaignCodex.createRegionJournal(name);
     });
 
-    html.find('.create-group-btn').click(async () => {
+    nativeHtml.querySelector('.create-group-btn')?.addEventListener('click', async () => {
         const name = await promptForName("Group Overview");
         if (name) await game.campaignCodex.createGroupJournal(name);
     });

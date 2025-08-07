@@ -234,16 +234,6 @@ static inventoryTable(inventory, isLootMode = false) {
     <div style="text-align:center">Final Price</div>
   `;
 
-  const tableHeader = `
-    <div class="table-header">
-      <div>Image</div>
-      <div>Item Name</div>
-      ${priceColumns}
-      <div style="text-align:center">Quantity</div>
-      <div style="text-align:center">Actions</div>
-    </div>
-  `;
-
   const inventoryRows = inventory.map(item => {
     const priceColumns = isLootMode ? '' : `
       <div class="item-base-price" style="text-align:center">
@@ -352,13 +342,16 @@ static inventoryTable(inventory, isLootMode = false) {
         }
       },
       render: (html) => {
-        html.find('.player-option').click(async (event) => {
-          const actorUuid = event.currentTarget.dataset.actorUuid;
-          const actor = await fromUuid(actorUuid);
-          if (actor) {
-            onPlayerSelected(actor);
-          }
-          html.closest('.dialog').find('.dialog-button.cancel button').click();
+        const nativeHtml = html instanceof jQuery ? html[0] : html;
+        nativeHtml.querySelectorAll('.player-option').forEach(element => {
+          element.addEventListener('click', async (event) => {
+            const actorUuid = event.currentTarget.dataset.actorUuid;
+            const actor = await fromUuid(actorUuid);
+            if (actor) {
+              onPlayerSelected(actor);
+            }
+            nativeHtml.closest('.dialog').querySelector('.dialog-button.cancel').click();
+          });
         });
       }
     }).render(true);
