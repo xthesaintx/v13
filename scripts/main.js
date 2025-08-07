@@ -25,26 +25,26 @@ import {
 Hooks.once('init', async function() {
     console.log('Campaign Codex | Initializing');
     await campaigncodexSettings();
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", LocationSheet, {
         makeDefault: false,
         label: "Campaign Codex: Location"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", ShopSheet, {
         makeDefault: false,
         label: "Campaign Codex: Shop"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", NPCSheet, {
         makeDefault: false,
         label: "Campaign Codex: NPC"
     });
 
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", RegionSheet, {
         makeDefault: false,
         label: "Campaign Codex: Region"
     });
-    DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(JournalEntry, "campaign-codex", GroupSheet, {
         makeDefault: false,
         label: "Campaign Codex: Group Overview"
     });
@@ -92,27 +92,27 @@ Hooks.once('ready', async function() {
     }
 });
 
-Hooks.on('getActorDirectoryEntryContext', (html, options) => {
-    options.push({
-        name: "Create NPC Journal",
-        icon: '<i class="fas fa-user"></i>',
-        condition: li => {
-            const actorUuid = li.data("uuid") || `Actor.${li.data("documentId")}`;
-            const actor = fromUuidSync(actorUuid);
-            return actor && actor.type === "npc" && !game.journal.find(j => {
-                const npcData = j.getFlag("campaign-codex", "data");
-                return npcData && npcData.linkedActor === actor.uuid;
-            });
-        },
-        callback: async li => {
-            const actorUuid = li.data("uuid") || `Actor.${li.data("documentId")}`;
-            const actor = await fromUuid(actorUuid);
-            if (actor) {
-                await game.campaignCodex.createNPCJournal(actor);
-            }
-        }
-    });
-});
+// Hooks.on('getActorDirectoryEntryContext', (html, options) => {
+//     options.push({
+//         name: "Create NPC Journal",
+//         icon: '<i class="fas fa-user"></i>',
+//         condition: li => {
+//             const actorUuid = li.data("uuid") || `Actor.${li.data("documentId")}`;
+//             const actor = fromUuidSync(actorUuid);
+//             return actor && actor.type === "npc" && !game.journal.find(j => {
+//                 const npcData = j.getFlag("campaign-codex", "data");
+//                 return npcData && npcData.linkedActor === actor.uuid;
+//             });
+//         },
+//         callback: async li => {
+//             const actorUuid = li.data("uuid") || `Actor.${li.data("documentId")}`;
+//             const actor = await fromUuid(actorUuid);
+//             if (actor) {
+//                 await game.campaignCodex.createNPCJournal(actor);
+//             }
+//         }
+//     });
+// });
 
 
 Hooks.on('preDeleteScene', async (scene, options, userId) => {
@@ -130,35 +130,38 @@ Hooks.on('preDeleteScene', async (scene, options, userId) => {
 
 
 
-Hooks.on('getJournalDirectoryEntryContext', (html, options) => {
-    options.push({
+
+ Hooks.on('getJournalEntryContextOptions', (application, menuItems) => {
+    if (!game.user.isGM) return;
+    
+    // Add custom menu items to the end
+    menuItems.push({
         name: "Export to Standard Journal",
         icon: '<i class="fas fa-book"></i>',
-        condition: li => {
-            const journalUuid = li.data("uuid") || `JournalEntry.${li.data("documentId")}`;
-            const journal = fromUuidSync(journalUuid);
+        condition: (element) => {
+            const journalId = element.dataset.entryId;
+            const journal = game.journal.get(journalId);
             return journal && journal.getFlag("campaign-codex", "type");
         },
-        callback: async li => {
-            const journalUuid = li.data("uuid") || `JournalEntry.${li.data("documentId")}`;
-            const journal = await fromUuid(journalUuid);
+        callback: async (element) => {
+            const journalId = element.dataset.entryId;
+            const journal = game.journal.get(journalId);
             if (journal) {
                 await CampaignCodexJournalConverter.showExportDialog(journal);
             }
         }
-    });
-    options.push({
+    }, {
         name: "Add to Group",
         icon: '<i class="fas fa-plus-circle"></i>',
-        condition: li => {
-            const journalUuid = li.data("uuid") || `JournalEntry.${li.data("documentId")}`;
-            const journal = fromUuidSync(journalUuid);
+        condition: (element) => {
+            const journalId = element.dataset.entryId;
+            const journal = game.journal.get(journalId);
             const journalType = journal?.getFlag("campaign-codex", "type");
             return journalType && ['region', 'location', 'shop', 'npc'].includes(journalType) && game.user.isGM;
         },
-        callback: async li => {
-            const journalUuid = li.data("uuid") || `JournalEntry.${li.data("documentId")}`;
-            const journal = await fromUuid(journalUuid);
+        callback: async (element) => {
+            const journalId = element.dataset.entryId;
+            const journal = game.journal.get(journalId);
             if (journal) {
                 await showAddToGroupDialog(journal); 
             }
@@ -166,10 +169,12 @@ Hooks.on('getJournalDirectoryEntryContext', (html, options) => {
     });
 });
 
+
+
 Hooks.on('renderJournalDirectory', (app, html, data) => {
     
     addJournalDirectoryUI(html); 
-});
+ });
 
 Hooks.on('createJournalEntry', async (document, options, userId) => {
     if (game.user.id !== userId || 
@@ -201,6 +206,13 @@ Hooks.on('createJournalEntry', async (document, options, userId) => {
 
         document.sheet.render(true);
     }
+
+
+
+
+
+
+
 });
 
 
@@ -311,21 +323,12 @@ Hooks.on('updateActor', async (actor, changes, options, userId) => {
         }
     }
 });
-// v13
-// Hooks.on('renderChatMessageHTML', (app, html, data) => {
-    // const handlers = html.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
-    // handlers.forEach(element => {
-    //     element.addEventListener('click', handleCampaignCodexClick);
-    // });
-
-// v12
-
-Hooks.on('renderChatMessage', (app, html, data) => {
-    const nativeHtml = html instanceof jQuery ? html[0] : html;
-    const handlers = nativeHtml.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
+Hooks.on('renderChatMessageHTML', (app, html, data) => {
+    const handlers = html.querySelectorAll(`[data-campaign-codex-handler^="${MODULE_NAME}|"]`);
     handlers.forEach(element => {
         element.addEventListener('click', handleCampaignCodexClick);
     });
+
 });
 
 

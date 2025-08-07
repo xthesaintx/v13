@@ -3,7 +3,7 @@ import { CampaignCodexLinkers } from './linkers.js';
 import { TemplateComponents } from './template-components.js';
 
 
-export class CampaignCodexBaseSheet extends JournalSheet {
+export class CampaignCodexBaseSheet extends foundry.appv1.sheets.JournalSheet {
   constructor(document, options = {}) {
     super(document, options);
     this._currentTab = 'info';
@@ -28,8 +28,8 @@ async getData() {
     notes: sheetData.notes || ""
   };
   
-  data.sheetData.enrichedDescription = await TextEditor.enrichHTML(data.sheetData.description, { async: true, secrets: this.document.isOwner }); 
-  data.sheetData.enrichedNotes = await TextEditor.enrichHTML(data.sheetData.notes, { async: true, secrets: this.document.isOwner }); 
+  data.sheetData.enrichedDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(data.sheetData.description, { async: true, secrets: this.document.isOwner }); 
+  data.sheetData.enrichedNotes = await foundry.applications.ux.TextEditor.implementation.enrichHTML(data.sheetData.notes, { async: true, secrets: this.document.isOwner }); 
 
   data.canEdit = this.document.canUserModify(game.user, "update");
   data.currentTab = this._currentTab;
@@ -237,7 +237,7 @@ async _onSaveData(event) {
   
   const nativeElement = this.element instanceof jQuery ? this.element[0] : this.element;
   const form = nativeElement.querySelector('form');
-  const formData = new FormDataExtended(form);
+  const formData = new foundry.applications.ux.FormDataExtended(form);
   const data = formData.object;
   const currentData = this.document.getFlag("campaign-codex", "data") || {};
   
@@ -288,7 +288,7 @@ async _saveFormData() {
   const form = nativeElement?.querySelector('form');
   if (form) {
     try {
-      const formData = new FormDataExtended(form);
+      const formData = new foundry.applications.ux.FormDataExtended(form);
       const data = formData.object;
       const currentData = this.document.getFlag("campaign-codex", "data") || {};
       

@@ -1,16 +1,16 @@
 {
   "id": "campaign-codex",
   "title": "campaign-codex",
-  "version": "0.0.1",
+  "version": "0.5.1",
   "esmodules": ["scripts/main.js"],
   "compatibility": {
     "minimum": "13",
     "verified": "13"
   },
-      "url": "https://github.com/xthesaintx/v13/",
-  "manifest": "https://raw.githubusercontent.com/xthesaintx/v13/main/module.json",
-  "download": "https://github.com/xthesaintx/v13/archive/refs/tags/001.zip",
-  "readme": "https://github.com/xthesaintx/v13/blob/main/README.md",
+      "url": "https://wgtngm.com",
+  "manifest": "https://wgtngm.com/modules/?",
+  "download": "",
+  "readme": "https://wgtngm.com",
   
 "authors": [
     {

@@ -23,7 +23,7 @@ export class DescriptionEditor extends FormApplication {
 
   activateListeners(html) {
   const nativeHtml = html instanceof jQuery ? html[0] : html;
-  super.activateListeners(html);
+    super.activateListeners(html);
 
   const targetElement = nativeHtml.querySelector('div[name="description"]');
 
@@ -32,7 +32,7 @@ export class DescriptionEditor extends FormApplication {
 
   const plugins = {
     menu: ProseMirror.ProseMirrorMenu.build(ProseMirror.defaultSchema, {
-      compact: true,      
+      compact: false,      
       destroyOnSave: true, 
       onSave: () => {
         this.submit();
@@ -42,7 +42,7 @@ export class DescriptionEditor extends FormApplication {
 
 
 
-  TextEditor.create({
+  foundry.applications.ux.TextEditor.implementation.create({
     target: targetElement,
     engine: "prosemirror",
     plugins: plugins
