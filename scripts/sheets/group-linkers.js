@@ -58,7 +58,24 @@ export class GroupLinkers {
     }
   }
 
-  static async _processRegion(region, nestedData, processedUuids) {
+  // static async _processRegion(region, nestedData, processedUuids) {
+  //   if (!nestedData.allRegions.find(r => r.uuid === region.uuid)) nestedData.allRegions.push(region);
+  //   const regionDoc = await fromUuid(region.uuid);
+  //   const regionData = regionDoc.getFlag("campaign-codex", "data") || {};
+  //   nestedData.locationsByRegion[region.uuid] = [];
+
+  //   for (const locationUuid of regionData.linkedLocations || []) {
+  //     const locationDoc = await fromUuid(locationUuid).catch(() => null);
+
+  //     if (!locationDoc) continue;
+  //     const locationInfo = { uuid: locationDoc.uuid, name: locationDoc.name, img: locationDoc.getFlag("campaign-codex", "image") || locationDoc.img, type: 'location', npcCount: (locationData.linkedNPCs || []).length, shopCount: (locationData.linkedShops || []).length };
+  //     nestedData.locationsByRegion[region.uuid].push(locationInfo);
+  //     await this._processEntity(locationInfo, nestedData, processedUuids, region, locationInfo);
+  //   }
+  // }
+
+
+    static async _processRegion(region, nestedData, processedUuids) {
     if (!nestedData.allRegions.find(r => r.uuid === region.uuid)) nestedData.allRegions.push(region);
     const regionDoc = await fromUuid(region.uuid);
     const regionData = regionDoc.getFlag("campaign-codex", "data") || {};
@@ -67,7 +84,18 @@ export class GroupLinkers {
     for (const locationUuid of regionData.linkedLocations || []) {
       const locationDoc = await fromUuid(locationUuid).catch(() => null);
       if (!locationDoc) continue;
-      const locationInfo = { uuid: locationDoc.uuid, name: locationDoc.name, img: locationDoc.getFlag("campaign-codex", "image") || locationDoc.img, type: 'location', npcCount: (locationData.linkedNPCs || []).length, shopCount: (locationData.linkedShops || []).length };
+
+      // Corrected: Define locationData here.
+      const locationData = locationDoc.getFlag("campaign-codex", "data") || {};
+
+      const locationInfo = {
+        uuid: locationDoc.uuid,
+        name: locationDoc.name,
+        img: locationDoc.getFlag("campaign-codex", "image") || locationDoc.img,
+        type: 'location',
+        npcCount: (locationData.linkedNPCs || []).length,
+        shopCount: (locationData.linkedShops || []).length
+      };
       nestedData.locationsByRegion[region.uuid].push(locationInfo);
       await this._processEntity(locationInfo, nestedData, processedUuids, region, locationInfo);
     }
